@@ -24,6 +24,8 @@ renamed the service "sessions" to "table_sessions" as it caused a conflict with 
 
 ran makemigrations and migrate, works well
 
+postgresql config is commented, uncomment when certain
+
 Next, I'll plan how to keep business logic out of views folder
 Additional important task: Plan and create the dbdiagram and the flowchart of the system
 
