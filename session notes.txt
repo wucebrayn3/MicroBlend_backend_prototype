@@ -34,4 +34,22 @@ Additional important task: Plan and create the dbdiagram and the flowchart of th
 
 
 
+March 13, 2026 6:44 PM
+Star of prototype development, schema has been created
+
+I'll be starting with apps/users
+
+superuser account: sam - adminpassword123
+
+I've made the basic models and basic functionalitites of those models. Time to rest now.
+
+Go to ChatGPT and find:
+the api endpoint is now working "http://127.0.0.1:8000/api/menu-items", help me implement the features in correct order
+before continuing
+
+--END--
+
+
+
+
 ADD DATE, START HERE FOR THE NEXT CODING SESSION
