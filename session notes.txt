@@ -52,4 +52,14 @@ before continuing
 
 
 
+March 14, 2026 Around 7 PM
+I added serializers so apis can be tested via postman
+
+Prepare the schema
+
+--END--
+
+
+
+
 ADD DATE, START HERE FOR THE NEXT CODING SESSION

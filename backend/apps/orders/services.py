@@ -1,22 +1,22 @@
-from .models import Order, OrderItem
+from apps.orders.models import Order, OrderItem
+from apps.menu.models import MenuItem
 
+def create_order(session):
+    return Order.objects.create(table_session=session)
 
-def create_order(table_session):
-
-    order = Order.objects.create(
-        table_session=table_session
-    )
-
-    return order
-
-
-def add_item(order, menu_item, quantity):
-
-    item = OrderItem.objects.create(
+def add_order_item(order, menu_item_id, quantity):
+    menu_item = MenuItem.objects.get(id=menu_item_id)
+    return OrderItem.objects.create(
         order=order,
         menu_item=menu_item,
         quantity=quantity,
         price=menu_item.price
     )
 
-    return item
+def calculate_order_total(order):
+    return sum([item.price * item.quantity for item in order.items.all()])
+
+def close_table_session(session):
+    session.ended_at = session.updated_at
+    session.is_active = False
+    session.save()

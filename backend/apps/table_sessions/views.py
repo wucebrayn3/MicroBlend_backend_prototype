@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import TableSession
+from .serializers import TableSessionSerializer
 
-# Create your views here.
+class TableSessionViewSet(viewsets.ModelViewSet):
+    queryset = TableSession.objects.all()
+    serializer_class = TableSessionSerializer
