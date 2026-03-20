@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Ingredient, InventoryBatch, InventoryMovement
+
+admin.site.register(Ingredient)
+admin.site.register(InventoryBatch)
+admin.site.register(InventoryMovement)

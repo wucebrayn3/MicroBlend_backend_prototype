@@ -1,0 +1,121 @@
+ROLE_ADMIN = "admin"
+ROLE_STAFF = "staff"
+ROLE_CUSTOMER = "customer"
+
+STAFF_ROLE_WAITER = "waiter"
+STAFF_ROLE_CASHIER = "cashier"
+STAFF_ROLE_KITCHEN = "kitchen"
+STAFF_ROLE_BAR = "bar"
+
+ROLE_CHOICES = (
+    (ROLE_ADMIN, "Admin"),
+    (ROLE_STAFF, "Staff"),
+    (ROLE_CUSTOMER, "Customer"),
+)
+
+STAFF_ROLE_CHOICES = (
+    (STAFF_ROLE_WAITER, "Waiter"),
+    (STAFF_ROLE_CASHIER, "Cashier"),
+    (STAFF_ROLE_KITCHEN, "Kitchen"),
+    (STAFF_ROLE_BAR, "Bar"),
+)
+
+STATION_KITCHEN = "kitchen"
+STATION_BAR = "bar"
+STATION_NONE = "none"
+
+PREPARATION_STATION_CHOICES = (
+    (STATION_KITCHEN, "Kitchen"),
+    (STATION_BAR, "Bar"),
+    (STATION_NONE, "None"),
+)
+
+ORDER_STATUS_DRAFT = "draft"
+ORDER_STATUS_PLACED = "placed"
+ORDER_STATUS_PREPARING = "preparing"
+ORDER_STATUS_READY = "ready"
+ORDER_STATUS_PAYMENT_PENDING = "payment_pending"
+ORDER_STATUS_PAID = "paid"
+ORDER_STATUS_CANCELLED = "cancelled"
+
+ORDER_STATUS_CHOICES = (
+    (ORDER_STATUS_DRAFT, "Draft"),
+    (ORDER_STATUS_PLACED, "Placed"),
+    (ORDER_STATUS_PREPARING, "Preparing"),
+    (ORDER_STATUS_READY, "Ready"),
+    (ORDER_STATUS_PAYMENT_PENDING, "Payment Pending"),
+    (ORDER_STATUS_PAID, "Paid"),
+    (ORDER_STATUS_CANCELLED, "Cancelled"),
+)
+
+WORKFLOW_STATUS_PENDING = "pending"
+WORKFLOW_STATUS_PREPARING = "preparing"
+WORKFLOW_STATUS_READY = "ready"
+WORKFLOW_STATUS_PAID = "paid"
+WORKFLOW_STATUS_CANCELLED = "cancelled"
+WORKFLOW_STATUS_NOT_REQUIRED = "not_required"
+WORKFLOW_STATUS_AWAITING_VERIFICATION = "awaiting_verification"
+
+WORKFLOW_STATUS_CHOICES = (
+    (WORKFLOW_STATUS_PENDING, "Pending"),
+    (WORKFLOW_STATUS_PREPARING, "Preparing"),
+    (WORKFLOW_STATUS_READY, "Ready"),
+    (WORKFLOW_STATUS_PAID, "Paid"),
+    (WORKFLOW_STATUS_CANCELLED, "Cancelled"),
+    (WORKFLOW_STATUS_NOT_REQUIRED, "Not Required"),
+    (WORKFLOW_STATUS_AWAITING_VERIFICATION, "Awaiting Verification"),
+)
+
+TABLE_STATUS_VACANT = "vacant"
+TABLE_STATUS_OCCUPIED = "occupied"
+TABLE_STATUS_MERGED = "merged"
+TABLE_STATUS_BLOCKED = "blocked"
+
+TABLE_STATUS_CHOICES = (
+    (TABLE_STATUS_VACANT, "Vacant"),
+    (TABLE_STATUS_OCCUPIED, "Occupied"),
+    (TABLE_STATUS_MERGED, "Merged"),
+    (TABLE_STATUS_BLOCKED, "Blocked"),
+)
+
+SCAN_STATUS_PENDING = "pending"
+SCAN_STATUS_APPROVED = "approved"
+SCAN_STATUS_BLOCKED = "blocked"
+
+SCAN_STATUS_CHOICES = (
+    (SCAN_STATUS_PENDING, "Pending"),
+    (SCAN_STATUS_APPROVED, "Approved"),
+    (SCAN_STATUS_BLOCKED, "Blocked"),
+)
+
+PAGE_REASON_CLEANUP = "cleanup"
+PAGE_REASON_PAYMENT = "payment"
+PAGE_REASON_ACCIDENT = "accident"
+
+PAGE_REASON_CHOICES = (
+    (PAGE_REASON_CLEANUP, "Table Cleanup"),
+    (PAGE_REASON_PAYMENT, "Payment"),
+    (PAGE_REASON_ACCIDENT, "Accident"),
+)
+
+PAGE_STATUS_PENDING = "pending"
+PAGE_STATUS_FINISHED = "finished"
+
+PAGE_STATUS_CHOICES = (
+    (PAGE_STATUS_PENDING, "Pending"),
+    (PAGE_STATUS_FINISHED, "Finished"),
+)
+
+ORDER_CHANNEL_CUSTOMER = "customer_account"
+ORDER_CHANNEL_GUEST = "guest"
+ORDER_CHANNEL_WAITER = "waiter_assisted"
+ORDER_CHANNEL_BULK = "bulk"
+ORDER_CHANNEL_POS = "pos_sync"
+
+ORDER_CHANNEL_CHOICES = (
+    (ORDER_CHANNEL_CUSTOMER, "Customer Account"),
+    (ORDER_CHANNEL_GUEST, "Guest"),
+    (ORDER_CHANNEL_WAITER, "Waiter Assisted"),
+    (ORDER_CHANNEL_BULK, "Bulk"),
+    (ORDER_CHANNEL_POS, "POS Sync"),
+)

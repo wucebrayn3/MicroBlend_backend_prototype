@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import CostSimulation, GeneratedReport
+
+admin.site.register(GeneratedReport)
+admin.site.register(CostSimulation)
