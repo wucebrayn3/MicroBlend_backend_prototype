@@ -7,6 +7,11 @@ class TableAdmin(admin.ModelAdmin):
     search_fields = ("identifier",)
 
 
-admin.site.register(TableMergeGroup)
+@admin.register(TableMergeGroup)
+class TableGroupAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_active", "combined_capacity")
+    search_fields = ("name",)
+
+
 admin.site.register(TableScanRequest)
 admin.site.register(StaffPageRequest)

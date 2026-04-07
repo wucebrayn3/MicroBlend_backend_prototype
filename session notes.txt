@@ -62,4 +62,30 @@ Prepare the schema
 
 
 
+March 28, 2026 10:48 PM
+
+adding invetory ingredient is successful via postman
+creating batch for ingredient failed (quantity_added is said to be an unexpected argument and caused 500 Internal Server Error)
+creating batch for ingredient (retry) is successful in Django Admin Interface (manual)
+
+left some important notes in API.txt pertaining to api/inventory/batches, see api/inventory/ingredients/
+
+NOTE:
+WHAT THE HECK IS GOING ON HERE, THIS HAS TO BE SOME KIND OF AN ANNOYING BUG I CAN'T FIX.
+NEEDS.FIXING.WHENEVER.POSSIBLE
+
+--END--
+
+
+
+March 31, 2026 1:02 PM
+
+tabe merge can be tabe grouping
+issue with api/inventory/batch is now fixed, it was a problem from apps/inventory/services.py 
+
+
+
+
+
+--END--
 ADD DATE, START HERE FOR THE NEXT CODING SESSION

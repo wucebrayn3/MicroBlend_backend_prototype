@@ -37,9 +37,13 @@ class TableMergeGroup(BaseModel):
     tables = models.ManyToManyField(Table, related_name="merge_groups")
     is_active = models.BooleanField(default=True)
 
+    class Meta:
+        verbose_name = "Table Group"
+        verbose_name_plural = "Table Groups"
+
     def save(self, *args, **kwargs):
         if not self.name:
-            self.name = generate_reference("MERGE")
+            self.name = generate_reference("GROUP")
         super().save(*args, **kwargs)
 
     @property

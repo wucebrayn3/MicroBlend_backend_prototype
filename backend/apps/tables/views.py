@@ -7,7 +7,7 @@ from apps.tables.models import StaffPageRequest, Table, TableMergeGroup, TableSc
 from apps.tables.serializers import (
     StaffPageFinishSerializer,
     StaffPageRequestSerializer,
-    TableMergeGroupSerializer,
+    TableGroupSerializer,
     TableScanModerationSerializer,
     TableScanRequestSerializer,
     TableSerializer,
@@ -39,10 +39,14 @@ class TableViewSet(viewsets.ModelViewSet):
         return Response(self.get_serializer(table).data)
 
 
-class TableMergeGroupViewSet(viewsets.ModelViewSet):
+class TableGroupViewSet(viewsets.ModelViewSet):
     queryset = TableMergeGroup.objects.prefetch_related("tables").all()
-    serializer_class = TableMergeGroupSerializer
+    serializer_class = TableGroupSerializer
     permission_classes = [IsStaffOrAdmin]
+
+
+# Backward compatibility alias while old route names are still accepted.
+TableMergeGroupViewSet = TableGroupViewSet
 
 
 class TableScanRequestViewSet(viewsets.ModelViewSet):

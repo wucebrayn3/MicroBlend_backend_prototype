@@ -170,3 +170,317 @@ This is normal behaviour.
 
 
 
+--ADMIN ONLY--
+
+GET api/admin/users/
+no payload
+headers:
+Key: Authorization | Value: {token}
+response:
+[
+    {
+        "id": 1,
+        "username": "user_d1cd5e9eac5e",
+        "first_name": "Test",
+        "last_name": "Customer 1",
+        "email": "testcustomer1@example.com",
+        "phone": "12345678910",
+        "role": "customer",
+        "staff_role": null,
+        "registered_device_id": null,
+        "is_active": true
+    },
+    {
+        "id": 2,
+        "username": "sam",
+        "first_name": "",
+        "last_name": "",
+        "email": "sam@example.com",
+        "phone": null,
+        "role": "admin",
+        "staff_role": null,
+        "registered_device_id": null,
+        "is_active": true
+    },
+    {
+        "id": 3,
+        "username": "user_6fb319fa3a11",
+        "first_name": "Test Staff",
+        "last_name": "Waiter 1",
+        "email": "teststaffwaiter1@example.com",
+        "phone": "22345678910",
+        "role": "staff",
+        "staff_role": "waiter",
+        "registered_device_id": null,
+        "is_active": true
+    },
+    {
+        "id": 4,
+        "username": "user_6a207b782438",
+        "first_name": "Test Staff",
+        "last_name": "Cashier 1",
+        "email": "teststaffcashier1@example.com",
+        "phone": "32345678910",
+        "role": "staff",
+        "staff_role": "cashier",
+        "registered_device_id": null,
+        "is_active": true
+    },
+    {
+        "id": 5,
+        "username": "user_ea0906f3050c",
+        "first_name": "Test Staff",
+        "last_name": "Kitchen 1",
+        "email": "teststaffkitchen1@example.com",
+        "phone": "42345678910",
+        "role": "staff",
+        "staff_role": "kitchen",
+        "registered_device_id": null,
+        "is_active": true
+    },
+    {
+        "id": 6,
+        "username": "user_7073085357aa",
+        "first_name": "Test Staff",
+        "last_name": "Bar 1",
+        "email": "teststaffbar1@example.com",
+        "phone": "52345678910",
+        "role": "staff",
+        "staff_role": "bar",
+        "registered_device_id": null,
+        "is_active": true
+    }
+]
+
+GET api/admin/users/3/
+no payload
+headers:
+Key: Authorization | Value {token}
+response:
+{
+    "id": 3,
+    "username": "user_6fb319fa3a11",
+    "first_name": "Test Staff",
+    "last_name": "Waiter 1",
+    "email": "teststaffwaiter1@example.com",
+    "phone": "22345678910",
+    "role": "staff",
+    "staff_role": "waiter",
+    "registered_device_id": null,
+    "is_active": true
+}
+
+PATCH api/admin/users/1/
+payload:
+{
+    "username": "test_customer_1"
+}
+response:
+{
+    "id": 1,
+    "username": "test_customer_1",
+    "first_name": "Test",
+    "last_name": "Customer 1",
+    "email": "testcustomer1@example.com",
+    "phone": "12345678910",
+    "role": "customer",
+    "staff_role": null,
+    "registered_device_id": null,
+    "is_active": true
+}
+
+POST api/admin/users/1/deactivate/
+no payload
+headers:
+Key: Authorization | Value: {token}
+response:
+{
+    "id": 1,
+    "username": "test_customer_1",
+    "first_name": "Test",
+    "last_name": "Customer 1",
+    "email": "testcustomer1@example.com",
+    "phone": "12345678910",
+    "role": "customer",
+    "staff_role": null,
+    "registered_device_id": null,
+    "is_active": false
+}
+
+FOR REACTIVATION:
+PATCH api/admin/users/1/
+headers:
+Key: Authorization | Value: {token}
+payload:
+{
+    "is_active": true
+}
+response:
+{
+    "id": 1,
+    "username": "test_customer_1",
+    "first_name": "Test",
+    "last_name": "Customer 1",
+    "email": "testcustomer1@example.com",
+    "phone": "12345678910",
+    "role": "customer",
+    "staff_role": null,
+    "registered_device_id": null,
+    "is_active": true
+}
+
+LOGGING IN A DEACTIVATED ACCOUNT:
+POST api/identity/login/
+payload:
+{
+  "identifier": "testcustomer1@example.com",
+  "password": "password123"
+}
+response:
+400 Bad Request
+{
+    "non_field_errors": [
+        "Invalid credentials."
+    ]
+}
+
+--STAFF ONLY--
+
+
+POST api/categories/
+NOTE: Panggawa ng categories (meals, beverages, dinner, snacks, etc...) ng foods ito, not for public access, kaya ang method nito ay POST
+headers
+Key: Authorization | Value: {token}
+payload:
+{
+  "name": "Meals",
+  "sort_order": 1
+}
+response:
+{
+    "id": 1,
+    "created_at": "2026-03-23T23:48:16.158997+08:00",
+    "updated_at": "2026-03-23T23:48:16.158997+08:00",
+    "name": "Meals",
+    "sort_order": 1
+}
+
+
+POST api/inventory/ingredients/
+headers:
+Key: Authorization | Value: {token}
+payload:
+{
+    "name": "Rice",
+    "unit": "g",
+    "reorder_level": 20.00
+}
+NOTE: REMEMBER THE INVENTORY INGREDIENT ID (IT IS USED WHEN PASSING AN ARGUMENT TO api/invetory/batches/ as the id represents an ingredient. in simpler terms, you are creating a batch of which id)
+response:
+201
+{
+    "id": 1,
+    "name": "Rice",
+    "unit": "g",
+    "reorder_level": "20.00",
+    "available_quantity": "0.00",
+    "created_at": "2026-03-28T22:41:37.212451+08:00",
+    "updated_at": "2026-03-28T22:41:37.212451+08:00"
+}
+
+
+
+POST api/inventory/batches/
+headers:
+Key: Authorization | Value: {token}
+payload:
+{
+    "ingredient": 1,
+    "quantity_added": "1000.00",
+    "unit_cost": "20.00",
+    "expiration_date": "2027-01-01",
+    "source": "Second re-stock"
+}
+response:
+201
+{
+    "id": 2,
+    "created_at": "2026-03-31T10:03:51.452621+08:00",
+    "updated_at": "2026-03-31T10:03:51.452621+08:00",
+    "quantity_added": "1000.00",
+    "quantity_remaining": "1000.00",
+    "unit_cost": "20.00",
+    "expiration_date": "2027-01-01",
+    "source": "Second re-stock",
+    "ingredient": 1
+}
+
+POST api/menu-items/
+headers:
+Key: Authorization | Value: {token}
+payload:
+{
+    "name":"Rice Meal",
+  "category":1,
+  "description":"Simple rice meal",
+  "price":"120.00",
+  "prep_eta_minutes":15,
+  "preparation_station":"kitchen",
+  "ingredients":[
+    {"ingredient":1,"quantity_required":"10.00"}
+  ]
+}
+response:
+201
+{
+    "id": 1,
+    "ingredients": [
+        {
+            "id": 1,
+            "ingredient": 1,
+            "ingredient_name": "Rice",
+            "quantity_required": "10.00"
+        }
+    ],
+    "created_at": "2026-03-28T22:53:39.655314+08:00",
+    "updated_at": "2026-03-28T22:53:39.692809+08:00",
+    "name": "Rice Meal",
+    "description": "Simple rice meal",
+    "price": "120.00",
+    "prep_eta_minutes": 15,
+    "preparation_station": "kitchen",
+    "is_available": true,
+    "popularity_score": 0,
+    "category": 1
+}
+
+FOR PUBLIC (customers)
+GET api/menu-items/
+headers:
+Key: Authorization | Value {token}
+no payload
+response:
+200
+[
+    {
+        "id": 1,
+        "ingredients": [
+            {
+                "id": 1,
+                "ingredient": 1,
+                "ingredient_name": "Rice",
+                "quantity_required": "10.00"
+            }
+        ],
+        "created_at": "2026-03-28T22:53:39.655314+08:00",
+        "updated_at": "2026-03-31T10:03:51.463576+08:00",
+        "name": "Rice Meal",
+        "description": "Simple rice meal",
+        "price": "120.00",
+        "prep_eta_minutes": 15,
+        "preparation_station": "kitchen",
+        "is_available": true,
+        "popularity_score": 0,
+        "category": 1
+    }
+]

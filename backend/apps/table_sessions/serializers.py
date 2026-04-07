@@ -3,12 +3,36 @@ from rest_framework import serializers
 
 from apps.audit_logs.services import log_user_action
 from apps.table_sessions.models import TableSession
+from apps.tables.models import TableMergeGroup
 
 
 class TableSessionSerializer(serializers.ModelSerializer):
+    table_group = serializers.PrimaryKeyRelatedField(
+        source="merge_group",
+        queryset=TableMergeGroup.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
     class Meta:
         model = TableSession
-        fields = "__all__"
+        fields = (
+            "id",
+            "table",
+            "merge_group",
+            "table_group",
+            "opened_by",
+            "customer_account",
+            "scan_request",
+            "source",
+            "party_size",
+            "guest_label",
+            "started_at",
+            "ended_at",
+            "is_active",
+            "created_at",
+            "updated_at",
+        )
 
     def create(self, validated_data):
         session = super().create(validated_data)

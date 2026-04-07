@@ -12,7 +12,7 @@ class TableSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class TableMergeGroupSerializer(serializers.ModelSerializer):
+class TableGroupSerializer(serializers.ModelSerializer):
     combined_capacity = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -21,12 +21,16 @@ class TableMergeGroupSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         tables = validated_data.pop("tables", [])
-        merge_group = TableMergeGroup.objects.create(**validated_data)
-        merge_group.tables.set(tables)
+        table_group = TableMergeGroup.objects.create(**validated_data)
+        table_group.tables.set(tables)
         Table.objects.filter(id__in=[table.id for table in tables]).update(status="merged")
         actor = self.context["request"].user
-        log_user_action(actor, "tables.merged", {"table_ids": [table.id for table in tables]}, merge_group)
-        return merge_group
+        log_user_action(actor, "tables.grouped", {"table_ids": [table.id for table in tables]}, table_group)
+        return table_group
+
+
+# Backward compatibility alias while clients migrate from "merge" to "group".
+TableMergeGroupSerializer = TableGroupSerializer
 
 
 class TableScanRequestSerializer(serializers.ModelSerializer):

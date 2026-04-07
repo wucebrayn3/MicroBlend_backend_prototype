@@ -20,7 +20,8 @@ class InventoryBatchSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         actor = self.context["request"].user if self.context.get("request") else None
-        return restock_batch(actor=actor, **validated_data)
+        quantity = validated_data.pop("quantity_added")
+        return restock_batch(actor=actor, quantity=quantity, **validated_data)
 
 
 class InventoryMovementSerializer(serializers.ModelSerializer):

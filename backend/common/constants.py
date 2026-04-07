@@ -74,7 +74,7 @@ TABLE_STATUS_BLOCKED = "blocked"
 TABLE_STATUS_CHOICES = (
     (TABLE_STATUS_VACANT, "Vacant"),
     (TABLE_STATUS_OCCUPIED, "Occupied"),
-    (TABLE_STATUS_MERGED, "Merged"),
+    (TABLE_STATUS_MERGED, "Grouped"),
     (TABLE_STATUS_BLOCKED, "Blocked"),
 )
 

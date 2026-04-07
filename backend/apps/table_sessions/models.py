@@ -50,5 +50,13 @@ class TableSession(BaseModel):
     class Meta:
         ordering = ("-started_at",)
 
+    @property
+    def table_group(self):
+        return self.merge_group
+
+    @table_group.setter
+    def table_group(self, value):
+        self.merge_group = value
+
     def __str__(self):
         return f"Session {self.id} - {self.table.identifier}"

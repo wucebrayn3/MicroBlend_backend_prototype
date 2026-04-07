@@ -7,7 +7,7 @@ MicroBlend is a Django REST backend for a spatially distributed restaurant setup
 - `apps.users`: account registration/login by email or mobile, device binding, RBAC, self-service account updates, and admin user control.
 - `apps.menu`: categories, menu items, ingredient requirements, customer-safe menu output, and one-click order playlists.
 - `apps.inventory`: ingredients, restock batches, stock movements, and automatic menu availability based on required ingredient quantities.
-- `apps.tables`: table metadata, QR scan requests, merge groups, occupancy changes, and universal staff paging.
+- `apps.tables`: table metadata, QR scan requests, table groups, occupancy changes, and universal staff paging.
 - `apps.table_sessions`: active table occupancy sessions tied to QR/manual/waiter flows.
 - `apps.orders`: draft orders, playlist ordering, waiter-assisted ordering, bulk order flags, kitchen/bar/cashier workflow, cancellation/edit rules, receipts, and audit trail hooks.
 - `apps.notifications`: role-targeted notifications and backend debounce protection.
@@ -41,7 +41,7 @@ MicroBlend is a Django REST backend for a spatially distributed restaurant setup
 - Auth and accounts: `/api/identity/...`
 - Menu and playlists: `/api/menu-items/`, `/api/categories/`, `/api/order-playlists/`
 - Inventory: `/api/inventory/...`
-- Tables and paging: `/api/tables/`, `/api/table-scan-requests/`, `/api/table-merges/`, `/api/staff-pages/`
+- Tables and paging: `/api/tables/`, `/api/table-scan-requests/`, `/api/table-groups/`, `/api/staff-pages/`
 - Sessions: `/api/table-sessions/`
 - Orders: `/api/orders/`, including `submit`, `cancel`, `kitchen_update`, `bar_update`, `cashier_update`, and `from_playlist`
 - Notifications: `/api/notifications/`
