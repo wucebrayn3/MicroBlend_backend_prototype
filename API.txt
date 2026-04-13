@@ -484,3 +484,166 @@ response:
         "category": 1
     }
 ]
+
+TABLES AND SESSIONS
+
+POST api/tables/
+headers:
+Key: Authorization | Value: { customer token }
+payload:
+{
+    "identifier": "T1",
+    "capacity": 4,
+    "zone": "Row 1 Column 1"
+}
+response:
+403 Forbidden
+{
+    "detail": "You do not have permission to perform this action."
+}
+
+STAFF ONLY
+POST api/tables/
+headers:
+(proper authorization)
+Key: Authorization | Key: { non-customer token }
+payload:
+{
+    "identifier": "T1",
+    "capacity": 4,
+    "zone": "Row 1 Column 1"
+}
+response:
+201 Created
+{
+    "id": 1,
+    "created_at": "2026-04-09T15:46:27.255069+08:00",
+    "updated_at": "2026-04-09T15:46:27.255069+08:00",
+    "identifier": "T1",
+    "capacity": 4,
+    "status": "vacant",
+    "zone": "Row 1 Column 1",
+    "qr_code_value": "TABLEQR-707F22F71D"
+}
+
+PUBLICLY AVAILABLE
+GET api/tables/
+headers:
+Key: Authorization | Value: { token }
+no payload
+response:
+200
+[
+    {
+        "id": 1,
+        "created_at": "2026-04-09T15:46:27.255069+08:00",
+        "updated_at": "2026-04-09T15:46:27.255069+08:00",
+        "identifier": "T1",
+        "capacity": 4,
+        "status": "vacant",
+        "zone": "Row 1 Column 1",
+        "qr_code_value": "TABLEQR-707F22F71D"
+    }
+]
+
+STAFF ONLY
+GET api/table-scan-requests/
+no payload
+headers:
+Key: Authorization | Value: { token }
+response:
+200
+[] (pag wla pang request)
+ito pag meron na request both from customer and staff:
+[
+    {
+        "id": 2,
+        "created_at": "2026-04-10T16:48:38.895430+08:00",
+        "updated_at": "2026-04-10T16:48:38.895430+08:00",
+        "requested_device_id": "testdevice2",
+        "status": "pending",
+        "note": "staff scan",
+        "blocked_reason": null,
+        "table": 1,
+        "requested_by": null
+    },
+    {
+        "id": 1,
+        "created_at": "2026-04-10T16:39:20.666473+08:00",
+        "updated_at": "2026-04-10T16:39:20.666473+08:00",
+        "requested_device_id": "testdevice1",
+        "status": "pending",
+        "note": "QR scan",
+        "blocked_reason": null,
+        "table": 1,
+        "requested_by": null
+    }
+]
+
+PUBLIC access
+POST api/table-scan-requests/
+headers:
+Key: Authorization | Value: { token }
+payload:
+NOTE: yung id ng mga table ang gagamitin natin
+{
+    "table": 1,
+    "requested_device_id": "testdevice1",
+    "note": "QR scan"
+}
+response:
+201
+{
+    "id": 1,
+    "created_at": "2026-04-10T16:39:20.666473+08:00",
+    "updated_at": "2026-04-10T16:39:20.666473+08:00",
+    "requested_device_id": "testdevice1",
+    "status": "pending",
+    "note": "QR scan",
+    "blocked_reason": null,
+    "table": 1,
+    "requested_by": null
+}
+
+STAFF ONLY
+GET api/table-scan-requests/{id}/
+no payload
+headers:
+Key: Authorization | Value: {token}
+response:
+200
+{
+    "id": 1,
+    "created_at": "2026-04-10T16:39:20.666473+08:00",
+    "updated_at": "2026-04-10T16:39:20.666473+08:00",
+    "requested_device_id": "testdevice1",
+    "status": "pending",
+    "note": "QR scan",
+    "blocked_reason": null,
+    "table": 1,
+    "requested_by": null
+}
+
+STAFF ONLY
+POST api/table-scan-requests/1/moderate/
+headers:
+Key: Authorization | Value: { token }
+payload:
+
+response:
+200
+{
+    "id": 1,
+    "created_at": "2026-04-10T16:39:20.666473+08:00",
+    "updated_at": "2026-04-10T16:53:36.287675+08:00",
+    "requested_device_id": "testdevice1",
+    "status": "approved",
+    "note": "Valid occupied table request",
+    "blocked_reason": null,
+    "table": 1,
+    "requested_by": null
+}
+NOTE: kahit approved na ang table request, d pa din s'ya mawawala sa records, pero mawawala s'ya sa request pool
+kasi malilipat ang mga approved request sa hiwalay na tab kunwari para lng organized ang view
+
+
