@@ -31,6 +31,7 @@ class OrderStatusLogSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
     status_logs = OrderStatusLogSerializer(many=True, read_only=True)
+    guest_key = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = Order
@@ -45,8 +46,14 @@ class OrderSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        items = self.initial_data.get("items", [])
+        request = self.context.get("request")
+        guest_key = (self.initial_data.get("guest_key") or "").strip()
         is_bulk_order = attrs.get("is_bulk_order", getattr(self.instance, "is_bulk_order", False))
+        if request and not request.user.is_authenticated and not guest_key:
+            raise serializers.ValidationError("guest_key is required when ordering as guest.")
+        if request and not request.user.is_authenticated and is_bulk_order:
+            raise serializers.ValidationError("Guest users cannot place bulk orders.")
+        items = self.initial_data.get("items", [])
         for item in items:
             quantity = int(item["quantity"])
             if quantity < 1:
@@ -56,6 +63,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        guest_key = validated_data.pop("guest_key", None)
         items = validated_data.pop("items", [])
         request = self.context["request"]
         return create_or_update_draft_order(
@@ -63,9 +71,11 @@ class OrderSerializer(serializers.ModelSerializer):
             order=None,
             order_data=validated_data,
             items_data=items,
+            guest_key=guest_key,
         )
 
     def update(self, instance, validated_data):
+        guest_key = validated_data.pop("guest_key", None)
         items = validated_data.pop("items", None)
         request = self.context["request"]
         return create_or_update_draft_order(
@@ -73,6 +83,7 @@ class OrderSerializer(serializers.ModelSerializer):
             order=instance,
             order_data=validated_data,
             items_data=items,
+            guest_key=guest_key,
         )
 
 

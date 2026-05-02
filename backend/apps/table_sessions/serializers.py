@@ -2,6 +2,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from apps.audit_logs.services import log_user_action
+from apps.realtime.services import publish_realtime_event
 from apps.table_sessions.models import TableSession
 from apps.tables.models import TableMergeGroup
 
@@ -41,6 +42,17 @@ class TableSessionSerializer(serializers.ModelSerializer):
         actor = self.context["request"].user if self.context.get("request") and self.context["request"].user.is_authenticated else None
         if actor:
             log_user_action(actor, "table_session.opened", {"table_id": session.table_id}, session)
+        publish_realtime_event(
+            event_type="table.session_opened",
+            payload={
+                "session_id": session.id,
+                "table_id": session.table_id,
+                "party_size": session.party_size,
+                "source": session.source,
+            },
+            role_targets=["waiter", "cashier", "kitchen", "bar", "admin"],
+            users=[session.customer_account] if session.customer_account else None,
+        )
         return session
 
 
@@ -61,4 +73,10 @@ class CloseTableSessionSerializer(serializers.ModelSerializer):
         instance.table.status = "vacant"
         instance.table.save(update_fields=["status", "updated_at"])
         log_user_action(self.context["request"].user, "table_session.closed", {"table_id": instance.table_id}, instance)
+        publish_realtime_event(
+            event_type="table.session_closed",
+            payload={"session_id": instance.id, "table_id": instance.table_id},
+            role_targets=["waiter", "cashier", "kitchen", "bar", "admin"],
+            users=[instance.customer_account] if instance.customer_account else None,
+        )
         return instance

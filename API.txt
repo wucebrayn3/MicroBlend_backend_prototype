@@ -647,3 +647,17 @@ NOTE: kahit approved na ang table request, d pa din s'ya mawawala sa records, pe
 kasi malilipat ang mga approved request sa hiwalay na tab kunwari para lng organized ang view
 
 
+POST /api/identity/guest/start/
+ito yung ibabalik nan:
+guest_key
+guest_user_id
+expires_at
+seconds_remaining
+
+How to use it in frontend
+Call POST /api/identity/guest/start/ once when user taps “Continue as Guest”.
+Store returned guest_key locally.
+Send guest_key with guest order create/submit/cancel calls.
+Optionally call GET /api/identity/guest/session/?guest_key=... to show expiry countdown.
+
+aralin mo nlng pre kung pano mo gagamitin yan. LMK pag may na-encounter ka na problem.

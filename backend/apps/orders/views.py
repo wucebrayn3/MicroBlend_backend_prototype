@@ -1,5 +1,7 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from common.permissions import IsAuthenticatedAndActive, IsStaffOrAdmin, build_staff_role_permission
@@ -21,7 +23,9 @@ class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
 
     def get_permissions(self):
-        if self.action in {"create", "list", "retrieve", "submit", "cancel", "from_playlist"}:
+        if self.action in {"create", "submit", "cancel"}:
+            return [AllowAny()]
+        if self.action in {"list", "retrieve", "from_playlist"}:
             return [IsAuthenticatedAndActive()]
         if self.action in {"kitchen_update"}:
             return [build_staff_role_permission("kitchen")()]
@@ -34,6 +38,16 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
+        if self.action in {"submit", "cancel"} and not user.is_authenticated:
+            guest_key = (self.request.data.get("guest_key") or self.request.query_params.get("guest_key") or "").strip()
+            if not guest_key:
+                return queryset.none()
+            return queryset.filter(
+                placed_by__is_guest=True,
+                placed_by__is_active=True,
+                placed_by__registered_device_id=guest_key,
+                channel="guest",
+            )
         if not user.is_authenticated:
             return queryset.none()
         if user.role == "customer":
@@ -88,6 +102,8 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def from_playlist(self, request):
+        if request.user.is_guest:
+            raise PermissionDenied("Guest users cannot order from playlists.")
         serializer = PlaylistOrderSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         order = serializer.save()

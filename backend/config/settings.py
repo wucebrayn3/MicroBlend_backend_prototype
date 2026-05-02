@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.menu",
     "apps.notifications",
     "apps.orders",
+    "apps.realtime",
     "apps.table_sessions",
     "apps.suppliers",
     "apps.tables",
@@ -110,3 +111,4 @@ ORDER_SUBMIT_DEBOUNCE_SECONDS = 5
 INVENTORY_UPDATE_DEBOUNCE_SECONDS = 2
 STAFF_PAGE_DEBOUNCE_SECONDS = 10
 ORDER_PRICE_ALERT_THRESHOLD = Decimal("2500.00")
+GUEST_ACCESS_HOURS = 12

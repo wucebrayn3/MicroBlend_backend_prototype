@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 
 from apps.audit_logs.services import log_user_action
+from apps.orders.models import Order
 from apps.users.models import User
 
 
@@ -51,8 +52,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         device_id = validated_data.pop("device_id", None) or None
         password = validated_data.pop("password")
         user = User.objects.create_user(password=password, registered_device_id=device_id, **validated_data)
+        linked_guest_orders = 0
+        if device_id:
+            guest_users = User.objects.filter(is_guest=True, registered_device_id=device_id)
+            guest_user_ids = list(guest_users.values_list("id", flat=True))
+            if guest_user_ids:
+                updated = Order.objects.filter(placed_by_id__in=guest_user_ids).update(placed_by=user)
+                linked_guest_orders += updated
+                guest_users.update(is_active=False, is_deleted=True)
         token, _ = Token.objects.get_or_create(user=user)
-        log_user_action(user, "account.registered", {"device_id": device_id})
+        log_user_action(user, "account.registered", {"device_id": device_id, "linked_guest_orders": linked_guest_orders})
         user.auth_token = token
         return user
 

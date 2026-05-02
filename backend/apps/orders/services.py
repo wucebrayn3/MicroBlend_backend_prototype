@@ -11,8 +11,11 @@ from apps.inventory.services import consume_ingredient
 from apps.menu.models import MenuItem, MenuItemIngredient
 from apps.notifications.services import create_role_notification, create_user_notification, enforce_debounce
 from apps.orders.models import Order, OrderItem, OrderStatusLog
+from apps.realtime.services import publish_realtime_event
+from apps.users.services import get_or_create_guest_user
 from common.constants import (
     ORDER_CHANNEL_CUSTOMER,
+    ORDER_CHANNEL_GUEST,
     ORDER_CHANNEL_WAITER,
     ORDER_STATUS_CANCELLED,
     ORDER_STATUS_PAID,
@@ -123,12 +126,22 @@ def _maybe_send_demand_alert(order):
 
 
 @transaction.atomic
-def create_or_update_draft_order(*, actor, order, order_data, items_data):
+def create_or_update_draft_order(*, actor, order, order_data, items_data, guest_key=None):
     actor_name, actor_role = _resolve_actor_snapshot(actor)
     channel = order_data.get("channel") or (order.channel if order else ORDER_CHANNEL_CUSTOMER)
 
     if actor and actor.role == "staff" and channel == ORDER_CHANNEL_CUSTOMER:
         channel = ORDER_CHANNEL_WAITER
+    if not actor and channel == ORDER_CHANNEL_CUSTOMER:
+        channel = ORDER_CHANNEL_GUEST
+    if not actor and channel == ORDER_CHANNEL_GUEST:
+        actor = get_or_create_guest_user(
+            guest_key=guest_key,
+            guest_name=order_data.get("placed_for_name"),
+        )
+        actor_name, actor_role = _resolve_actor_snapshot(actor)
+    if channel == ORDER_CHANNEL_GUEST and order_data.get("is_bulk_order"):
+        raise ValidationError("Guest users cannot place bulk orders.")
 
     if order is None:
         order = Order.objects.create(
@@ -179,6 +192,12 @@ def create_or_update_draft_order(*, actor, order, order_data, items_data):
     )
     if actor:
         log_user_action(actor, "order.draft_saved", {"order_id": order.id, "channel": order.channel}, order)
+    publish_realtime_event(
+        event_type="order.draft_saved",
+        payload={"order_id": order.id, "status": order.status, "total_amount": str(order.total_amount)},
+        role_targets=["cashier", "waiter", "kitchen", "bar", "admin"],
+        users=[order.placed_by] if order.placed_by else None,
+    )
     return order
 
 
@@ -245,6 +264,12 @@ def submit_order(order, actor=None):
     _maybe_send_demand_alert(order)
     if actor:
         log_user_action(actor, "order.submitted", {"order_id": order.id}, order)
+    publish_realtime_event(
+        event_type="order.submitted",
+        payload={"order_id": order.id, "receipt_number": order.receipt_number, "status": order.status},
+        role_targets=["cashier", "waiter", "kitchen", "bar", "admin"],
+        users=[order.placed_by] if order.placed_by else None,
+    )
     return order
 
 
@@ -264,6 +289,12 @@ def cancel_order(order, actor=None, note=None):
     )
     if actor:
         log_user_action(actor, "order.cancelled", {"order_id": order.id, "note": note}, order)
+    publish_realtime_event(
+        event_type="order.cancelled",
+        payload={"order_id": order.id, "status": order.status, "note": note},
+        role_targets=["cashier", "waiter", "kitchen", "bar", "admin"],
+        users=[order.placed_by] if order.placed_by else None,
+    )
     return order
 
 
@@ -296,6 +327,17 @@ def set_station_status(*, order, station, status_value, actor):
         payload={station_field: status_value, "status": order.status},
     )
     log_user_action(actor, f"order.{station}.{status_value}", {"order_id": order.id}, order)
+    publish_realtime_event(
+        event_type=f"order.{station}_status_changed",
+        payload={
+            "order_id": order.id,
+            "station": station,
+            "station_status": status_value,
+            "order_status": order.status,
+        },
+        role_targets=["cashier", "waiter", "kitchen", "bar", "admin"],
+        users=[order.placed_by] if order.placed_by else None,
+    )
     return order
 
 
@@ -316,4 +358,10 @@ def set_cashier_status(*, order, status_value, actor):
         payload={"cashier_status": order.cashier_status, "status": order.status},
     )
     log_user_action(actor, f"order.cashier.{status_value}", {"order_id": order.id}, order)
+    publish_realtime_event(
+        event_type="order.cashier_status_changed",
+        payload={"order_id": order.id, "cashier_status": order.cashier_status, "order_status": order.status},
+        role_targets=["cashier", "waiter", "kitchen", "bar", "admin"],
+        users=[order.placed_by] if order.placed_by else None,
+    )
     return order

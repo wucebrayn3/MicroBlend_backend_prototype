@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 
 from common.permissions import IsAuthenticatedAndActive, IsStaffOrAdmin
@@ -47,7 +48,16 @@ class OrderPlaylistViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedAndActive]
 
     def get_queryset(self):
+        if self.request.user.is_guest:
+            return OrderPlaylist.objects.none()
         return OrderPlaylist.objects.filter(owner=self.request.user).prefetch_related("items__menu_item")
 
     def perform_create(self, serializer):
+        if self.request.user.is_guest:
+            raise PermissionDenied("Guest users cannot create order playlists.")
         serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        if self.request.user.is_guest:
+            raise PermissionDenied("Guest users cannot edit order playlists.")
+        serializer.save()

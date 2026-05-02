@@ -15,6 +15,7 @@ MicroBlend is a Django REST backend for a spatially distributed restaurant setup
 - `apps.analytics`: admin dashboard snapshots, report generation, backups, resets, and costing/profit simulations.
 - `apps.audit_logs`: critical action logging for sensitive staff/admin operations.
 - `apps.feedback`: customer feedback and incident/report submissions.
+- `apps.realtime`: SSE-based live event feed for inventory/menu/order/table updates.
 
 ## Offline And Real-Time Strategy
 
@@ -22,6 +23,7 @@ MicroBlend is a Django REST backend for a spatially distributed restaurant setup
 - `apps.integrations.SyncEvent` acts as a local sync outbox so mobile clients or a secondary POS can pull changes after reconnecting.
 - Role-targeted notifications give kitchen, bar, cashier, and waiter workflows a near-real-time backend signal even when the frontend is implemented separately.
 - Backend debounce rules provide a second safety layer if the frontend debounce is bypassed.
+- `apps.realtime` exposes a role-aware event stream so clients can receive live updates without polling full resources.
 
 ## Key Business Rules Implemented
 
@@ -46,6 +48,7 @@ MicroBlend is a Django REST backend for a spatially distributed restaurant setup
 - Orders: `/api/orders/`, including `submit`, `cancel`, `kitchen_update`, `bar_update`, `cashier_update`, and `from_playlist`
 - Notifications: `/api/notifications/`
 - Integrations and sync: `/api/integrations/...`
+- Realtime feed: `/api/realtime/events/`, `/api/realtime/stream/`
 - Analytics: `/api/analytics/...`
 - OpenAPI schema: `/api/schema/`
 - Swagger UI: `/api/docs/`
@@ -61,3 +64,4 @@ Validated with:
 
 - The committed `backend/db.sqlite3` predates the rebuilt migration graph. For a clean setup, create a fresh database and run migrations from the current codebase.
 - The original project virtual environment points to a missing Python install on this machine. The code itself is valid, but local execution may require recreating the virtualenv before normal `python manage.py ...` usage.
+- WebSockets are not enabled in this environment yet. Real-time updates currently use Server-Sent Events (SSE) endpoints.

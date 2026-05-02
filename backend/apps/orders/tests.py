@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
 
 from apps.inventory.models import Ingredient
 from apps.inventory.services import restock_batch
@@ -54,3 +55,48 @@ class OrderLifecycleTests(TestCase):
         set_station_status(order=order, station="kitchen", status_value="preparing", actor=self.kitchen)
         with self.assertRaises(ValidationError):
             cancel_order(order, actor=self.customer)
+
+    def test_guest_order_creates_guest_user_representation(self):
+        guest_order = create_or_update_draft_order(
+            actor=None,
+            order=None,
+            order_data={"table_session": self.session, "placed_for_name": "Walk-in Guest"},
+            items_data=[{"menu_item": self.menu_item, "quantity": 1}],
+            guest_key="guest-device-001",
+        )
+        self.assertIsNotNone(guest_order.placed_by)
+        self.assertTrue(guest_order.placed_by.is_guest)
+        self.assertEqual(guest_order.channel, "guest")
+
+    def test_guest_bulk_order_is_blocked(self):
+        with self.assertRaises(ValidationError):
+            create_or_update_draft_order(
+                actor=None,
+                order=None,
+                order_data={"table_session": self.session, "is_bulk_order": True},
+                items_data=[{"menu_item": self.menu_item, "quantity": 1}],
+                guest_key="guest-device-001",
+            )
+
+    def test_expired_guest_key_creates_new_guest_user(self):
+        old_order = create_or_update_draft_order(
+            actor=None,
+            order=None,
+            order_data={"table_session": self.session},
+            items_data=[{"menu_item": self.menu_item, "quantity": 1}],
+            guest_key="guest-device-rotating",
+        )
+        old_guest = old_order.placed_by
+        old_guest.guest_expires_at = timezone.now() - timedelta(minutes=1)
+        old_guest.save(update_fields=["guest_expires_at", "updated_at"])
+
+        new_order = create_or_update_draft_order(
+            actor=None,
+            order=None,
+            order_data={"table_session": self.session},
+            items_data=[{"menu_item": self.menu_item, "quantity": 1}],
+            guest_key="guest-device-rotating",
+        )
+        self.assertNotEqual(old_guest.id, new_order.placed_by_id)
+        old_guest.refresh_from_db()
+        self.assertFalse(old_guest.is_active)

@@ -3,6 +3,7 @@ from uuid import uuid4
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from common.constants import ROLE_CHOICES, ROLE_CUSTOMER, ROLE_STAFF, STAFF_ROLE_CHOICES
 from common.models import BaseModel
@@ -46,6 +47,8 @@ class User(AbstractUser, BaseModel):
     phone = models.CharField(max_length=20, unique=True, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True, null=True)
     registered_device_id = models.CharField(max_length=128, unique=True, blank=True, null=True)
+    is_guest = models.BooleanField(default=False)
+    guest_expires_at = models.DateTimeField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
 
     REQUIRED_FIELDS = ["email"]
@@ -57,7 +60,7 @@ class User(AbstractUser, BaseModel):
         if self.email:
             self.email = self.__class__.objects.normalize_email(self.email)
 
-        if not self.email and not self.phone:
+        if not self.is_guest and not self.email and not self.phone:
             raise ValidationError("Email or mobile number is required.")
 
         if self.role == ROLE_STAFF and not self.staff_role:
@@ -65,6 +68,12 @@ class User(AbstractUser, BaseModel):
 
         if self.role != ROLE_STAFF:
             self.staff_role = None
+
+        if self.is_guest:
+            self.role = ROLE_CUSTOMER
+            self.staff_role = None
+            if self.guest_expires_at and self.guest_expires_at <= timezone.now():
+                self.is_active = False
 
     @property
     def display_name(self):
