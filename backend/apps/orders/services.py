@@ -127,8 +127,9 @@ def _maybe_send_demand_alert(order):
 
 @transaction.atomic
 def create_or_update_draft_order(*, actor, order, order_data, items_data, guest_key=None):
+    order_data = dict(order_data or {})
     actor_name, actor_role = _resolve_actor_snapshot(actor)
-    channel = order_data.get("channel") or (order.channel if order else ORDER_CHANNEL_CUSTOMER)
+    channel = order_data.pop("channel", None) or (order.channel if order else ORDER_CHANNEL_CUSTOMER)
 
     if actor and actor.role == "staff" and channel == ORDER_CHANNEL_CUSTOMER:
         channel = ORDER_CHANNEL_WAITER
@@ -165,7 +166,9 @@ def create_or_update_draft_order(*, actor, order, order_data, items_data, guest_
 
     if items_data is not None:
         for item_data in items_data:
-            menu_item = item_data["menu_item"]
+            menu_item = item_data.get("menu_item") or item_data.get("menu_items")
+            if menu_item is None:
+                raise ValidationError("Each order item must include menu_item.")
             if not isinstance(menu_item, MenuItem):
                 menu_item = MenuItem.objects.get(pk=menu_item)
             menu_item.recalculate_availability(save=True)

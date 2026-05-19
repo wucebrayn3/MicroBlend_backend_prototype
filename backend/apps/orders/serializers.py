@@ -16,8 +16,19 @@ from apps.orders.services import (
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = "__all__"
-        read_only_fields = ("item_name", "station", "unit_price")
+        fields = (
+            "id",
+            "order",
+            "menu_item",
+            "quantity",
+            "customization_notes",
+            "item_name",
+            "station",
+            "unit_price",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("order", "item_name", "station", "unit_price", "created_at", "updated_at")
 
 
 class OrderStatusLogSerializer(serializers.ModelSerializer):

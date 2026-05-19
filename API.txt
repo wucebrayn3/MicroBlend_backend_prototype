@@ -647,6 +647,7 @@ NOTE: kahit approved na ang table request, d pa din s'ya mawawala sa records, pe
 kasi malilipat ang mga approved request sa hiwalay na tab kunwari para lng organized ang view
 
 
+
 POST /api/identity/guest/start/
 ito yung ibabalik nan:
 guest_key

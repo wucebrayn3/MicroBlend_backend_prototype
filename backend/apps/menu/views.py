@@ -11,7 +11,11 @@ from .serializers import CategorySerializer, CustomerMenuItemSerializer, MenuIte
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsStaffOrAdmin]
+    
+    def permissions(self):
+        if self.action in {"list", "retrieve"}:
+            return [AllowAny()]
+        return [IsStaffOrAdmin()]
 
 
 class MenuItemViewSet(viewsets.ModelViewSet):
