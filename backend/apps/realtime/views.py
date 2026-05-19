@@ -3,34 +3,41 @@ import time
 
 from django.http import StreamingHttpResponse
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from apps.realtime.serializers import RealtimeEventSerializer
-from apps.realtime.services import get_user_event_queryset
+from apps.realtime.services import get_guest_event_queryset, get_user_event_queryset
 
 
 class RealtimeEventListView(generics.ListAPIView):
     serializer_class = RealtimeEventSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         after_id = int(self.request.query_params.get("after_id", 0))
+        if not self.request.user.is_authenticated:
+            guest_key = self.request.query_params.get("guest_key", "")
+            return get_guest_event_queryset(guest_key=guest_key, after_id=after_id).order_by("id")
         return get_user_event_queryset(self.request.user, after_id=after_id).order_by("id")
 
 
 class RealtimeStreamView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         after_id = int(request.query_params.get("after_id", 0))
         timeout_seconds = int(request.query_params.get("timeout", 30))
         started_at = time.time()
+        guest_key = request.query_params.get("guest_key", "")
 
         def event_stream():
             cursor = after_id
             while time.time() - started_at < timeout_seconds:
-                events = get_user_event_queryset(request.user, after_id=cursor).order_by("id")[:100]
+                if request.user.is_authenticated:
+                    events = get_user_event_queryset(request.user, after_id=cursor).order_by("id")[:100]
+                else:
+                    events = get_guest_event_queryset(guest_key=guest_key, after_id=cursor).order_by("id")[:100]
                 if events:
                     for event in events:
                         cursor = event.id
