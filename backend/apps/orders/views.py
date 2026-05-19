@@ -23,9 +23,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
 
     def get_permissions(self):
-        if self.action in {"create", "submit", "cancel"}:
-            return [AllowAny()]
-        if self.action in {"list", "retrieve"}:
+        if self.action in {"create", "submit", "cancel", "retrieve", "list"}:
             return [AllowAny()]
         if self.action in {"from_playlist"}:
             return [IsAuthenticatedAndActive()]
