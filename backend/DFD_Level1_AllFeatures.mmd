@@ -1,0 +1,136 @@
+flowchart LR
+  %% External Entities
+  CUST[Customer / Guest]
+  STAFF[Staff: Waiter/Cashier/Kitchen/Bar]
+  ADMIN[Admin]
+  EXT[External POS/Mobile/Kiosk]
+
+  %% Core Processes
+  P1((1.0 Identity & Access))
+  P2((2.0 Menu & Playlist Management))
+  P3((3.0 Inventory & Availability))
+  P4((4.0 Table, Scan, Session & Paging))
+  P5((5.0 Order Lifecycle Processing))
+  P6((6.0 Notifications))
+  P7((7.0 Realtime Event Streaming))
+  P8((8.0 Integrations & Offline Sync))
+  P9((9.0 Feedback Management))
+  P10((10.0 Analytics, Reports, Backup, Reset))
+
+  %% Data Stores
+  D1[(D1 Users)]
+  D2[(D2 Menu/Categories)]
+  D3[(D3 Playlists)]
+  D4[(D4 Ingredients/Batches/Movements)]
+  D5[(D5 Tables/ScanRequests/TableGroups)]
+  D6[(D6 TableSessions)]
+  D7[(D7 Orders/OrderItems/StatusLogs)]
+  D8[(D8 Notifications/DebounceRecords)]
+  D9[(D9 RealtimeEvents)]
+  D10[(D10 SyncEvents/ExternalSystems)]
+  D11[(D11 FeedbackEntries)]
+  D12[(D12 AnalyticsReports/Simulations)]
+  D13[(D13 AuditLogs)]
+
+  %% Identity Flows
+  CUST -->|registration data: email/phone, password, name| P1
+  CUST -->|login credentials: email/phone + password + device_id| P1
+  CUST -->|guest start request: guest_name| P1
+  CUST -->|guest status check: guest_key| P1
+  STAFF -->|login credentials + device_id| P1
+  ADMIN -->|admin credentials| P1
+  P1 -->|user profile, role, staff_role, registered_device_id, guest_key, guest_expires_at| D1
+  P1 -->|auth token, user profile, guest_key/session status| CUST
+  P1 -->|auth token + role profile| STAFF
+  P1 -->|auth token + admin profile| ADMIN
+  P1 -->|account/login/logout/deactivate actions| D13
+
+  %% Menu / Playlist / Availability Flows
+  STAFF -->|menu/category create-update payloads| P2
+  ADMIN -->|menu/category governance updates| P2
+  CUST -->|menu browse request| P2
+  P2 -->|menu item, category, prep_station, price, ETA| D2
+  P2 -->|playlist items: menu_item_id, quantity, owner| D3
+  P2 -->|menu list with availability flags| CUST
+  P2 -->|menu + playlist data| STAFF
+  P2 -->|ingredient requirement mapping per menu item| P3
+
+  %% Inventory + Auto Availability
+  STAFF -->|restock input: ingredient, qty, unit_cost, expiry, source| P3
+  P3 -->|ingredient master, restock batches, stock movements| D4
+  P3 -->|availability recalculation trigger| D2
+  P3 -->|stock change + low/out flags| P6
+  P3 -->|inventory/menu stock events| P7
+  P3 -->|inventory actions| D13
+
+  %% Table / Scan / Sessions / Paging
+  CUST -->|table QR scan request: table_id, guest_key/requested_by| P4
+  STAFF -->|scan moderation decision approve/block + reason| P4
+  STAFF -->|table occupancy updates, table group merge/split| P4
+  STAFF -->|open/close session data: table_id, opened_by, customer_account| P4
+  CUST -->|staff page request: table/session context + message| P4
+  STAFF -->|page finish action: resolved_by, resolution note| P4
+  P4 -->|table metadata, status, group membership, scan requests| D5
+  P4 -->|active/inactive table session records| D6
+  P4 -->|table/scan/page/session events| P7
+  P4 -->|table and session updates| STAFF
+
+  %% Order Lifecycle
+  CUST -->|draft order data: table_session, items, qty, notes, channel, guest_key| P5
+  STAFF -->|waiter-assisted draft/submit, station updates, cashier updates| P5
+  CUST -->|submit/cancel request + order_id + guest_key/token| P5
+  STAFF -->|order from playlist: playlist_id + placed_for data| P5
+  P5 -->|order header, items, statuses, receipt, cashier verification flags| D7
+  P5 -->|read playlist composition| D3
+  P5 -->|read menu item + station + price + availability| D2
+  P5 -->|ingredient deduction request by station start| P3
+  P5 -->|sync payload: order.draft_saved/submitted/cancelled/status updates| P8
+  P5 -->|order notifications: new order, high value, demand alerts| P6
+  P5 -->|order realtime events| P7
+  P5 -->|order action logs| D13
+  P5 -->|order status/receipt response| CUST
+  P5 -->|kitchen/bar/cashier queue/status response| STAFF
+
+  %% Notifications
+  P6 -->|role-targeted and user notifications| D8
+  P6 -->|debounce actor_key/action/object_key + window checks| D8
+  P6 -->|notification feed| CUST
+  P6 -->|role notification feed| STAFF
+  P6 -->|admin notification feed| ADMIN
+  P6 -->|notification pushed as event| P7
+
+  %% Realtime
+  P7 -->|persist event_type, payload, role_targets, users| D9
+  CUST -->|realtime poll/stream request: after_id, timeout| P7
+  STAFF -->|realtime poll/stream request: after_id, timeout| P7
+  ADMIN -->|realtime poll/stream request: after_id, timeout| P7
+  P7 -->|filtered SSE/event list payloads| CUST
+  P7 -->|filtered SSE/event list payloads| STAFF
+  P7 -->|filtered SSE/event list payloads| ADMIN
+
+  %% Integrations / Offline Sync
+  EXT -->|external system registration/activation data| P8
+  P8 -->|external system definitions| D10
+  P8 -->|sync events outbox: event_type, aggregate_type/id, payload, idempotency_key| D10
+  EXT -->|sync pull request: last known event/id cursor| P8
+  P8 -->|sync event batches for offline catch-up| EXT
+
+  %% Feedback
+  CUST -->|feedback/rating/incident payload| P9
+  STAFF -->|feedback review inputs if allowed| P9
+  P9 -->|feedback entries + metadata| D11
+  P9 -->|feedback submission status| CUST
+
+  %% Analytics / Admin Ops
+  ADMIN -->|dashboard query params: range/start/end| P10
+  ADMIN -->|report generation params| P10
+  ADMIN -->|cost simulation params| P10
+  ADMIN -->|backup/reset commands| P10
+  P10 -->|read orders, inventory, tables, feedback, users, logs| D1
+  P10 -->|read operational data| D4
+  P10 -->|read transactional data| D7
+  P10 -->|read incidents/feedback| D11
+  P10 -->|read audit trail| D13
+  P10 -->|generated reports and simulations| D12
+  P10 -->|dashboard snapshot, report outputs, simulation outputs, backup path/reset status| ADMIN
+  P10 -->|analytics actions| D13

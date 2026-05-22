@@ -1,0 +1,241 @@
+erDiagram
+    USER ||--o{ ORDER : places
+    USER ||--o{ ORDER_PLAYLIST : owns
+    USER ||--o{ TABLE_SESSION : opens
+    USER ||--o{ TABLE_SCAN_REQUEST : requests
+    USER ||--o{ STAFF_PAGE_REQUEST : requests
+    USER ||--o{ NOTIFICATION : receives
+    USER ||--o{ AUDIT_LOG : performs
+    USER ||--o{ FEEDBACK_ENTRY : submits
+
+    CATEGORY ||--o{ MENU_ITEM : classifies
+    MENU_ITEM ||--o{ MENU_ITEM_INGREDIENT : requires
+    INGREDIENT ||--o{ MENU_ITEM_INGREDIENT : supplies
+
+    INGREDIENT ||--o{ INVENTORY_BATCH : stocked_as
+    INGREDIENT ||--o{ INVENTORY_MOVEMENT : tracked_by
+    INVENTORY_BATCH ||--o{ INVENTORY_MOVEMENT : movement_source
+
+    TABLE ||--o{ TABLE_SCAN_REQUEST : scanned_for
+    TABLE ||--o{ TABLE_SESSION : hosts
+    TABLE_MERGE_GROUP ||--o{ TABLE : groups
+    TABLE_SESSION ||--o{ STAFF_PAGE_REQUEST : context_for
+
+    TABLE_SESSION ||--o{ ORDER : contains
+    ORDER ||--o{ ORDER_ITEM : has
+    MENU_ITEM ||--o{ ORDER_ITEM : ordered_as
+    ORDER ||--o{ ORDER_STATUS_LOG : logs
+
+    ORDER_PLAYLIST ||--o{ ORDER_PLAYLIST_ITEM : contains
+    MENU_ITEM ||--o{ ORDER_PLAYLIST_ITEM : references
+
+    EXTERNAL_SYSTEM ||--o{ SYNC_EVENT : emits
+
+    USER ||--o{ GENERATED_REPORT : generates
+    USER ||--o{ COST_SIMULATION : creates
+
+    USER {
+      bigint id PK
+      string role
+      string staff_role
+      string email
+      string phone
+      string registered_device_id
+      bool is_guest
+      datetime guest_expires_at
+      bool is_active
+    }
+
+    CATEGORY {
+      bigint id PK
+      string name
+      int sort_order
+    }
+
+    MENU_ITEM {
+      bigint id PK
+      bigint category_id FK
+      string name
+      decimal price
+      string preparation_station
+      int prep_eta_minutes
+      bool is_available
+      int popularity_score
+    }
+
+    MENU_ITEM_INGREDIENT {
+      bigint id PK
+      bigint menu_item_id FK
+      bigint ingredient_id FK
+      decimal quantity_required
+    }
+
+    INGREDIENT {
+      bigint id PK
+      string name
+      string unit
+      decimal reorder_level
+    }
+
+    INVENTORY_BATCH {
+      bigint id PK
+      bigint ingredient_id FK
+      decimal quantity_added
+      decimal quantity_remaining
+      decimal unit_cost
+      date expiration_date
+    }
+
+    INVENTORY_MOVEMENT {
+      bigint id PK
+      bigint ingredient_id FK
+      bigint batch_id FK
+      string movement_type
+      decimal quantity
+      bigint related_order_id
+      string note
+    }
+
+    TABLE {
+      bigint id PK
+      string table_number
+      int capacity
+      string status
+      bigint merge_group_id FK
+    }
+
+    TABLE_MERGE_GROUP {
+      bigint id PK
+      string label
+      bool is_active
+    }
+
+    TABLE_SCAN_REQUEST {
+      bigint id PK
+      bigint table_id FK
+      bigint requested_by_id FK
+      string status
+      string moderation_note
+    }
+
+    TABLE_SESSION {
+      bigint id PK
+      bigint table_id FK
+      bigint merge_group_id FK
+      bigint opened_by_id FK
+      bigint customer_account_id FK
+      bool is_active
+      datetime started_at
+      datetime ended_at
+    }
+
+    STAFF_PAGE_REQUEST {
+      bigint id PK
+      bigint table_id FK
+      bigint session_id FK
+      bigint requested_by_id FK
+      bigint resolved_by_id FK
+      string status
+      string message
+    }
+
+    ORDER {
+      bigint id PK
+      bigint table_session_id FK
+      bigint placed_by_id FK
+      string receipt_number
+      string channel
+      string status
+      string kitchen_status
+      string bar_status
+      string cashier_status
+      bool is_bulk_order
+      bool requires_cashier_verification
+      decimal total_amount
+    }
+
+    ORDER_ITEM {
+      bigint id PK
+      bigint order_id FK
+      bigint menu_item_id FK
+      string item_name
+      string station
+      int quantity
+      decimal unit_price
+    }
+
+    ORDER_STATUS_LOG {
+      bigint id PK
+      bigint order_id FK
+      bigint actor_id FK
+      string status
+      string note
+    }
+
+    ORDER_PLAYLIST {
+      bigint id PK
+      bigint owner_id FK
+      string name
+    }
+
+    ORDER_PLAYLIST_ITEM {
+      bigint id PK
+      bigint playlist_id FK
+      bigint menu_item_id FK
+      int quantity
+    }
+
+    NOTIFICATION {
+      bigint id PK
+      bigint recipient_id FK
+      string role_target
+      string title
+      string category
+      bool is_read
+    }
+
+    EXTERNAL_SYSTEM {
+      bigint id PK
+      string name
+      string system_type
+      bool is_active
+    }
+
+    SYNC_EVENT {
+      bigint id PK
+      bigint source_system_id FK
+      string event_type
+      string aggregate_type
+      string aggregate_id
+      string idempotency_key
+    }
+
+    FEEDBACK_ENTRY {
+      bigint id PK
+      bigint user_id FK
+      string category
+      int rating
+      string status
+    }
+
+    GENERATED_REPORT {
+      bigint id PK
+      bigint generated_by_id FK
+      string report_type
+      datetime generated_at
+    }
+
+    COST_SIMULATION {
+      bigint id PK
+      bigint created_by_id FK
+      string scenario_name
+      decimal projected_cost
+    }
+
+    AUDIT_LOG {
+      bigint id PK
+      bigint actor_id FK
+      string action
+      string actor_role
+      datetime created_at
+    }

@@ -55,6 +55,8 @@ class TableScanRequestViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "create":
             return [AllowAny()]
+        if self.action == "moderate":
+            return [build_staff_role_permission("cashier")()]
         return [IsStaffOrAdmin()]
 
     def get_serializer_class(self):
@@ -62,7 +64,7 @@ class TableScanRequestViewSet(viewsets.ModelViewSet):
             return TableScanModerationSerializer
         return TableScanRequestSerializer
 
-    @action(detail=True, methods=["post"], permission_classes=[IsStaffOrAdmin])
+    @action(detail=True, methods=["post"], permission_classes=[build_staff_role_permission("cashier")])
     def moderate(self, request, pk=None):
         scan_request = self.get_object()
         serializer = self.get_serializer(scan_request, data=request.data)

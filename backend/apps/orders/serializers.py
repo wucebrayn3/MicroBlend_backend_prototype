@@ -60,6 +60,11 @@ class OrderSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         guest_key = (self.initial_data.get("guest_key") or "").strip()
         is_bulk_order = attrs.get("is_bulk_order", getattr(self.instance, "is_bulk_order", False))
+        table_session = attrs.get("table_session", getattr(self.instance, "table_session", None))
+        if table_session is None:
+            raise serializers.ValidationError("Ordering requires an active table session.")
+        if not table_session.is_active:
+            raise serializers.ValidationError("This table session is no longer active.")
         if request and not request.user.is_authenticated and not guest_key:
             raise serializers.ValidationError("guest_key is required when ordering as guest.")
         if request and not request.user.is_authenticated and is_bulk_order:

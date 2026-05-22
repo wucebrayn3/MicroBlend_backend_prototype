@@ -604,6 +604,8 @@ response:
     "table": 1,
     "requested_by": null
 }
+THIS IS NOW UPDATED, TABLE REQUESTS STATUS ARE AUTOMATICALLY SET TO "APPROVED".
+
 
 STAFF ONLY
 GET api/table-scan-requests/{id}/
@@ -624,7 +626,7 @@ response:
     "requested_by": null
 }
 
-STAFF ONLY
+STAFF ONLY - CASHIER ONLY
 POST api/table-scan-requests/1/moderate/
 headers:
 Key: Authorization | Value: { token }

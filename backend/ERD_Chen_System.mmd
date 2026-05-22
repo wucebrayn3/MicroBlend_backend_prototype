@@ -1,0 +1,279 @@
+%% Chen Notation ERD — vertically chained layout
+%% [Entity]  {Relationship}  (Attribute)
+
+flowchart TD
+
+%% ============================== ENTITIES & ATTRIBUTES ==============================
+
+USER["USER"]
+u1("id (PK)") & u2("username") & u3("email") & u4("phone")
+u5("role") & u6("staff_role") & u7("is_active")
+USER --- u1 & u2 & u3 & u4
+USER --- u5 & u6 & u7
+
+NOTIFICATION["NOTIFICATION"]
+n1("id (PK)") & n2("recipient (FK)") & n3("title") & n4("category") & n5("is_read")
+NOTIFICATION --- n1 & n2 & n3 & n4 & n5
+
+DEBOUNCE_RECORD["DEBOUNCE_RECORD"]
+d1("id (PK)") & d2("actor_key") & d3("action") & d4("object_key")
+DEBOUNCE_RECORD --- d1 & d2 & d3 & d4
+
+CATEGORY["CATEGORY"]
+c1("id (PK)") & c2("name") & c3("sort_order")
+CATEGORY --- c1 & c2 & c3
+
+MENU_ITEM["MENU_ITEM"]
+m1("id (PK)") & m2("name") & m3("price") & m4("station")
+m5("is_available") & m6("prep_eta") & m7("category (FK)")
+MENU_ITEM --- m1 & m2 & m3 & m4
+MENU_ITEM --- m5 & m6 & m7
+
+MENU_ITEM_INGREDIENT["MENU_ITEM_INGREDIENT"]
+mi1("id (PK)") & mi2("menu_item (FK)") & mi3("ingredient (FK)") & mi4("qty_required")
+MENU_ITEM_INGREDIENT --- mi1 & mi2 & mi3 & mi4
+
+INGREDIENT["INGREDIENT"]
+i1("id (PK)") & i2("name") & i3("unit") & i4("reorder_level")
+INGREDIENT --- i1 & i2 & i3 & i4
+
+INVENTORY_BATCH["INVENTORY_BATCH"]
+ib1("id (PK)") & ib2("ingredient (FK)") & ib3("qty_added") & ib4("qty_remaining")
+ib5("unit_cost") & ib6("expiration_date")
+INVENTORY_BATCH --- ib1 & ib2 & ib3 & ib4
+INVENTORY_BATCH --- ib5 & ib6
+
+INVENTORY_MOVEMENT["INVENTORY_MOVEMENT"]
+im1("id (PK)") & im2("ingredient (FK)") & im3("batch (FK)") & im4("movement_type")
+im5("quantity") & im6("actor (FK)")
+INVENTORY_MOVEMENT --- im1 & im2 & im3 & im4
+INVENTORY_MOVEMENT --- im5 & im6
+
+ORDER["ORDER"]
+o1("id (PK)") & o2("session (FK)") & o3("placed_by (FK)")
+o4("channel") & o5("status") & o6("total_amount") & o7("receipt_number")
+ORDER --- o1 & o2 & o3
+ORDER --- o4 & o5 & o6 & o7
+
+ORDER_ITEM["ORDER_ITEM"]
+oi1("id (PK)") & oi2("order (FK)") & oi3("menu_item (FK)")
+oi4("item_name") & oi5("station") & oi6("qty") & oi7("unit_price")
+ORDER_ITEM --- oi1 & oi2 & oi3
+ORDER_ITEM --- oi4 & oi5 & oi6 & oi7
+
+ORDER_STATUS_LOG["ORDER_STATUS_LOG"]
+os1("id (PK)") & os2("order (FK)") & os3("actor (FK)") & os4("status") & os5("note")
+ORDER_STATUS_LOG --- os1 & os2 & os3 & os4 & os5
+
+FEEDBACK_ENTRY["FEEDBACK_ENTRY"]
+f1("id (PK)") & f2("submitted_by (FK)") & f3("order (FK)")
+f4("entry_type") & f5("subject") & f6("status")
+FEEDBACK_ENTRY --- f1 & f2 & f3
+FEEDBACK_ENTRY --- f4 & f5 & f6
+
+ORDER_PLAYLIST["ORDER_PLAYLIST"]
+op1("id (PK)") & op2("owner (FK)") & op3("name")
+ORDER_PLAYLIST --- op1 & op2 & op3
+
+ORDER_PLAYLIST_ITEM["ORDER_PLAYLIST_ITEM"]
+opi1("id (PK)") & opi2("playlist (FK)") & opi3("menu_item (FK)") & opi4("qty")
+ORDER_PLAYLIST_ITEM --- opi1 & opi2 & opi3 & opi4
+
+TABLE["TABLE"]
+t1("id (PK)") & t2("identifier") & t3("capacity") & t4("status") & t5("zone")
+TABLE --- t1 & t2 & t3 & t4 & t5
+
+TABLE_MERGE_GROUP["TABLE_MERGE_GROUP"]
+tg1("id (PK)") & tg2("name") & tg3("is_active")
+TABLE_MERGE_GROUP --- tg1 & tg2 & tg3
+
+TABLE_SESSION["TABLE_SESSION"]
+ts1("id (PK)") & ts2("table (FK)") & ts3("opened_by (FK)")
+ts4("customer (FK)") & ts5("is_active") & ts6("started_at")
+TABLE_SESSION --- ts1 & ts2 & ts3
+TABLE_SESSION --- ts4 & ts5 & ts6
+
+TABLE_SCAN_REQUEST["TABLE_SCAN_REQUEST"]
+tr1("id (PK)") & tr2("table (FK)") & tr3("requested_by (FK)") & tr4("status")
+TABLE_SCAN_REQUEST --- tr1 & tr2 & tr3 & tr4
+
+STAFF_PAGE_REQUEST["STAFF_PAGE_REQUEST"]
+sr1("id (PK)") & sr2("table (FK)") & sr3("session (FK)") & sr4("requested_by (FK)")
+sr5("reason") & sr6("status")
+STAFF_PAGE_REQUEST --- sr1 & sr2 & sr3 & sr4
+STAFF_PAGE_REQUEST --- sr5 & sr6
+
+AUDIT_LOG["AUDIT_LOG"]
+a1("id (PK)") & a2("actor (FK)") & a3("action") & a4("target_type")
+a5("created_at")
+AUDIT_LOG --- a1 & a2 & a3 & a4
+AUDIT_LOG --- a5
+
+GENERATED_REPORT["GENERATED_REPORT"]
+r1("id (PK)") & r2("generated_by (FK)") & r3("range_type") & r4("start_at") & r5("end_at")
+GENERATED_REPORT --- r1 & r2 & r3 & r4 & r5
+
+COST_SIMULATION["COST_SIMULATION"]
+cs1("id (PK)") & cs2("created_by (FK)") & cs3("assumptions") & cs4("results")
+COST_SIMULATION --- cs1 & cs2 & cs3 & cs4
+
+EXTERNAL_SYSTEM["EXTERNAL_SYSTEM"]
+e1("id (PK)") & e2("name") & e3("system_type") & e4("is_active")
+EXTERNAL_SYSTEM --- e1 & e2 & e3 & e4
+
+SYNC_EVENT["SYNC_EVENT"]
+se1("id (PK)") & se2("source_system (FK)") & se3("event_type")
+se4("aggregate_type") & se5("aggregate_id")
+SYNC_EVENT --- se1 & se2 & se3
+SYNC_EVENT --- se4 & se5
+
+REALTIME_EVENT["REALTIME_EVENT"]
+rt1("id (PK)") & rt2("event_type") & rt3("role_target") & rt4("user (FK)")
+REALTIME_EVENT --- rt1 & rt2 & rt3 & rt4
+
+%% ============================== RELATIONSHIPS ==============================
+
+places{"places"}
+owns{"owns"}
+opens{"opens"}
+sits_at{"sits at"}
+requests_scan{"requests (scan)"}
+requests_page{"requests (staff)"}
+resolves_page{"resolves"}
+receives_notif{"receives"}
+performs{"performs"}
+submits{"submits"}
+generates_report{"generates"}
+creates_sim{"creates"}
+triggers_rt{"triggers"}
+acts_movement{"acts upon"}
+classifies{"classifies"}
+requires_mi{"requires"}
+supplies{"supplies"}
+ordered_as{"ordered as"}
+references_pl{"references"}
+stocked_as{"stocked as"}
+tracked_by{"tracked by"}
+movement_source{"movement source"}
+hosts{"hosts"}
+scanned_for{"scanned for"}
+page_for{"page for"}
+groups_tables{"groups (m2m)"}
+groups_sessions{"groups sessions"}
+contains_order{"contains"}
+context_for{"context for"}
+approved_by_scan{"approved by"}
+contains_items{"contains"}
+logs_status{"logs"}
+receives_feedback{"receives"}
+contains_pl{"contains"}
+emits{"emits"}
+
+%% ============================== CONNECTIONS ==============================
+
+USER -- "1" --- places
+places -- "N" --- ORDER
+
+USER -- "1" --- owns
+owns -- "N" --- ORDER_PLAYLIST
+
+USER -- "1" --- opens
+opens -- "N" --- TABLE_SESSION
+
+USER -- "1" --- sits_at
+sits_at -- "N" --- TABLE_SESSION
+
+USER -- "1" --- requests_scan
+requests_scan -- "N" --- TABLE_SCAN_REQUEST
+
+USER -- "1" --- requests_page
+requests_page -- "N" --- STAFF_PAGE_REQUEST
+
+USER -- "1" --- resolves_page
+resolves_page -- "N" --- STAFF_PAGE_REQUEST
+
+USER -- "1" --- receives_notif
+receives_notif -- "N" --- NOTIFICATION
+
+USER -- "1" --- performs
+performs -- "N" --- AUDIT_LOG
+
+USER -- "1" --- submits
+submits -- "N" --- FEEDBACK_ENTRY
+
+USER -- "1" --- generates_report
+generates_report -- "N" --- GENERATED_REPORT
+
+USER -- "1" --- creates_sim
+creates_sim -- "N" --- COST_SIMULATION
+
+USER -- "1" --- triggers_rt
+triggers_rt -- "N" --- REALTIME_EVENT
+
+USER -- "1" --- acts_movement
+acts_movement -- "N" --- INVENTORY_MOVEMENT
+
+CATEGORY -- "1" --- classifies
+classifies -- "N" --- MENU_ITEM
+
+MENU_ITEM -- "1" --- requires_mi
+requires_mi -- "N" --- MENU_ITEM_INGREDIENT
+
+INGREDIENT -- "1" --- supplies
+supplies -- "N" --- MENU_ITEM_INGREDIENT
+
+MENU_ITEM -- "1" --- ordered_as
+ordered_as -- "N" --- ORDER_ITEM
+
+MENU_ITEM -- "1" --- references_pl
+references_pl -- "N" --- ORDER_PLAYLIST_ITEM
+
+INGREDIENT -- "1" --- stocked_as
+stocked_as -- "N" --- INVENTORY_BATCH
+
+INGREDIENT -- "1" --- tracked_by
+tracked_by -- "N" --- INVENTORY_MOVEMENT
+
+INVENTORY_BATCH -- "1" --- movement_source
+movement_source -- "N" --- INVENTORY_MOVEMENT
+
+TABLE -- "1" --- hosts
+hosts -- "N" --- TABLE_SESSION
+
+TABLE -- "1" --- scanned_for
+scanned_for -- "N" --- TABLE_SCAN_REQUEST
+
+TABLE -- "1" --- page_for
+page_for -- "N" --- STAFF_PAGE_REQUEST
+
+TABLE_MERGE_GROUP -- "M" --- groups_tables
+groups_tables -- "N" --- TABLE
+
+TABLE_MERGE_GROUP -- "1" --- groups_sessions
+groups_sessions -- "N" --- TABLE_SESSION
+
+TABLE_SESSION -- "1" --- contains_order
+contains_order -- "N" --- ORDER
+
+TABLE_SESSION -- "1" --- context_for
+context_for -- "N" --- STAFF_PAGE_REQUEST
+
+TABLE_SCAN_REQUEST -- "1" --- approved_by_scan
+approved_by_scan -- "N" --- TABLE_SESSION
+
+ORDER -- "1" --- contains_items
+contains_items -- "N" --- ORDER_ITEM
+
+ORDER -- "1" --- logs_status
+logs_status -- "N" --- ORDER_STATUS_LOG
+
+ORDER -- "1" --- receives_feedback
+receives_feedback -- "N" --- FEEDBACK_ENTRY
+
+ORDER_PLAYLIST -- "1" --- contains_pl
+contains_pl -- "N" --- ORDER_PLAYLIST_ITEM
+
+EXTERNAL_SYSTEM -- "1" --- emits
+emits -- "N" --- SYNC_EVENT
+
+

@@ -1,0 +1,230 @@
+erDiagram
+    USER ||--o{ ORDER : places
+    USER ||--o{ ORDER_PLAYLIST : owns
+    USER ||--o{ TABLE_SESSION : opens
+    USER ||--o{ TABLE_SCAN_REQUEST : requests
+    USER ||--o{ STAFF_PAGE_REQUEST : requests
+    USER ||--o{ NOTIFICATION : receives
+    USER ||--o{ AUDIT_LOG : performs
+    USER ||--o{ FEEDBACK_ENTRY : submits
+
+    CATEGORY ||--o{ MENU_ITEM : classifies
+    MENU_ITEM ||--o{ MENU_ITEM_INGREDIENT : requires
+    INGREDIENT ||--o{ MENU_ITEM_INGREDIENT : used_by
+
+    INGREDIENT ||--o{ INVENTORY_BATCH : has
+    INGREDIENT ||--o{ INVENTORY_MOVEMENT : tracks
+    INVENTORY_BATCH ||--o{ INVENTORY_MOVEMENT : source
+
+    TABLE_MERGE_GROUP ||--o{ TABLE_ENTITY : groups
+    TABLE_ENTITY ||--o{ TABLE_SCAN_REQUEST : has
+    TABLE_ENTITY ||--o{ TABLE_SESSION : hosts
+    TABLE_SESSION ||--o{ STAFF_PAGE_REQUEST : context
+
+    TABLE_SESSION ||--o{ ORDER : contains
+    ORDER ||--o{ ORDER_ITEM : has
+    MENU_ITEM ||--o{ ORDER_ITEM : referenced_by
+    ORDER ||--o{ ORDER_STATUS_LOG : logs
+
+    ORDER_PLAYLIST ||--o{ ORDER_PLAYLIST_ITEM : has
+    MENU_ITEM ||--o{ ORDER_PLAYLIST_ITEM : includes
+
+    EXTERNAL_SYSTEM ||--o{ SYNC_EVENT : emits
+
+    USER ||--o{ GENERATED_REPORT : generates
+    USER ||--o{ COST_SIMULATION : creates
+
+    USER {
+      int id PK
+      string role
+      string staff_role
+      string email
+      string phone
+      string registered_device_id
+      string is_guest
+      string is_active
+    }
+
+    CATEGORY {
+      int id PK
+      string name
+      int sort_order
+    }
+
+    MENU_ITEM {
+      int id PK
+      int category_id FK
+      string name
+      decimal price
+      string preparation_station
+      int prep_eta_minutes
+      string is_available
+    }
+
+    MENU_ITEM_INGREDIENT {
+      int id PK
+      int menu_item_id FK
+      int ingredient_id FK
+      decimal quantity_required
+    }
+
+    INGREDIENT {
+      int id PK
+      string name
+      string unit
+      decimal reorder_level
+    }
+
+    INVENTORY_BATCH {
+      int id PK
+      int ingredient_id FK
+      decimal quantity_added
+      decimal quantity_remaining
+      decimal unit_cost
+      string expiration_date
+    }
+
+    INVENTORY_MOVEMENT {
+      int id PK
+      int ingredient_id FK
+      int batch_id FK
+      string movement_type
+      decimal quantity
+      int related_order_id
+    }
+
+    TABLE_ENTITY {
+      int id PK
+      string table_number
+      int capacity
+      string status
+      int merge_group_id FK
+    }
+
+    TABLE_MERGE_GROUP {
+      int id PK
+      string label
+      string is_active
+    }
+
+    TABLE_SCAN_REQUEST {
+      int id PK
+      int table_id FK
+      int requested_by_id FK
+      string status
+    }
+
+    TABLE_SESSION {
+      int id PK
+      int table_id FK
+      int merge_group_id FK
+      int opened_by_id FK
+      int customer_account_id FK
+      string is_active
+    }
+
+    STAFF_PAGE_REQUEST {
+      int id PK
+      int table_id FK
+      int session_id FK
+      int requested_by_id FK
+      int resolved_by_id FK
+      string status
+    }
+
+    ORDER {
+      int id PK
+      int table_session_id FK
+      int placed_by_id FK
+      string receipt_number
+      string channel
+      string status
+      string kitchen_status
+      string bar_status
+      string cashier_status
+      string is_bulk_order
+      decimal total_amount
+    }
+
+    ORDER_ITEM {
+      int id PK
+      int order_id FK
+      int menu_item_id FK
+      string item_name
+      string station
+      int quantity
+      decimal unit_price
+    }
+
+    ORDER_STATUS_LOG {
+      int id PK
+      int order_id FK
+      int actor_id FK
+      string status
+    }
+
+    ORDER_PLAYLIST {
+      int id PK
+      int owner_id FK
+      string name
+    }
+
+    ORDER_PLAYLIST_ITEM {
+      int id PK
+      int playlist_id FK
+      int menu_item_id FK
+      int quantity
+    }
+
+    NOTIFICATION {
+      int id PK
+      int recipient_id FK
+      string role_target
+      string title
+      string category
+      string is_read
+    }
+
+    EXTERNAL_SYSTEM {
+      int id PK
+      string name
+      string system_type
+      string is_active
+    }
+
+    SYNC_EVENT {
+      int id PK
+      int source_system_id FK
+      string event_type
+      string aggregate_type
+      string aggregate_id
+      string idempotency_key
+    }
+
+    FEEDBACK_ENTRY {
+      int id PK
+      int user_id FK
+      string category
+      int rating
+      string status
+    }
+
+    GENERATED_REPORT {
+      int id PK
+      int generated_by_id FK
+      string report_type
+    }
+
+    COST_SIMULATION {
+      int id PK
+      int created_by_id FK
+      string scenario_name
+      decimal projected_cost
+    }
+
+    AUDIT_LOG {
+      int id PK
+      int actor_id FK
+      string action
+      string actor_role
+    }

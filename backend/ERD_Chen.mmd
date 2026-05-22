@@ -1,0 +1,191 @@
+%% Chen Notation ERD
+%% Rectangles [ ] = Entities
+%% Diamonds  { } = Relationships
+%% Cardinality: 1 = one, N = many
+%% Entities with (wk) are weak / associative entities
+
+flowchart TD
+    %% === USER & CORE OPERATIONS ===
+    subgraph UserOps["User & Orders"]
+        USER["USER"]
+        ORDER["ORDER"]
+        ORDER_ITEM["ORDER_ITEM (wk)"]
+        ORDER_STATUS_LOG["ORDER_STATUS_LOG (wk)"]
+        ORDER_PLAYLIST["ORDER_PLAYLIST"]
+        ORDER_PLAYLIST_ITEM["ORDER_PLAYLIST_ITEM (wk)"]
+    end
+
+    %% === MENU ===
+    subgraph MenuDomain["Menu & Ingredients"]
+        CATEGORY["CATEGORY"]
+        MENU_ITEM["MENU_ITEM"]
+        MENU_ITEM_INGREDIENT["MENU_ITEM_INGREDIENT (wk)"]
+        INGREDIENT["INGREDIENT"]
+    end
+
+    %% === INVENTORY ===
+    subgraph InventoryDomain["Inventory"]
+        INVENTORY_BATCH["INVENTORY_BATCH"]
+        INVENTORY_MOVEMENT["INVENTORY_MOVEMENT (wk)"]
+    end
+
+    %% === TABLE MANAGEMENT ===
+    subgraph TableDomain["Table Management"]
+        TABLE["TABLE"]
+        TABLE_MERGE_GROUP["TABLE_MERGE_GROUP"]
+        TABLE_SESSION["TABLE_SESSION"]
+        TABLE_SCAN_REQUEST["TABLE_SCAN_REQUEST (wk)"]
+        STAFF_PAGE_REQUEST["STAFF_PAGE_REQUEST (wk)"]
+    end
+
+    %% === SYSTEM ===
+    subgraph SystemDomain["System"]
+        EXTERNAL_SYSTEM["EXTERNAL_SYSTEM"]
+        SYNC_EVENT["SYNC_EVENT (wk)"]
+    end
+
+    %% === USER SECONDARY ===
+    subgraph UserSecondary["User Secondary"]
+        NOTIFICATION["NOTIFICATION"]
+        FEEDBACK_ENTRY["FEEDBACK_ENTRY"]
+        AUDIT_LOG["AUDIT_LOG"]
+        GENERATED_REPORT["GENERATED_REPORT"]
+        COST_SIMULATION["COST_SIMULATION"]
+    end
+
+    %% === RELATIONSHIPS ===
+    places{"places"}
+    owns{"owns"}
+    opens{"opens"}
+    requests_TSR{"requests"}
+    requests_SPR{"requests"}
+    receives{"receives"}
+    performs{"performs"}
+    submits{"submits"}
+    classifies{"classifies"}
+    requires_mi{"requires"}
+    supplies{"supplies"}
+    stocked_as{"stocked as"}
+    tracked_by{"tracked by"}
+    movement_source{"movement source"}
+    scanned_for{"scanned for"}
+    hosts{"hosts"}
+    groups{"groups"}
+    context_for{"context for"}
+    contains_order{"contains"}
+    has{"has"}
+    ordered_as{"ordered as"}
+    logs{"logs"}
+    contains_playlist{"contains"}
+    references{"references"}
+    emits{"emits"}
+    generates{"generates"}
+    creates{"creates"}
+
+    %% === USER → ORDER ===
+    USER -- "1" --- places
+    places -- "N" --- ORDER
+
+    %% === USER → ORDER_PLAYLIST ===
+    USER -- "1" --- owns
+    owns -- "N" --- ORDER_PLAYLIST
+
+    %% === USER → TABLE_SESSION ===
+    USER -- "1" --- opens
+    opens -- "N" --- TABLE_SESSION
+
+    %% === USER → TABLE_SCAN_REQUEST ===
+    USER -- "1" --- requests_TSR
+    requests_TSR -- "N" --- TABLE_SCAN_REQUEST
+
+    %% === USER → STAFF_PAGE_REQUEST ===
+    USER -- "1" --- requests_SPR
+    requests_SPR -- "N" --- STAFF_PAGE_REQUEST
+
+    %% === USER → NOTIFICATION ===
+    USER -- "1" --- receives
+    receives -- "N" --- NOTIFICATION
+
+    %% === USER → AUDIT_LOG ===
+    USER -- "1" --- performs
+    performs -- "N" --- AUDIT_LOG
+
+    %% === USER → FEEDBACK_ENTRY ===
+    USER -- "1" --- submits
+    submits -- "N" --- FEEDBACK_ENTRY
+
+    %% === CATEGORY → MENU_ITEM ===
+    CATEGORY -- "1" --- classifies
+    classifies -- "N" --- MENU_ITEM
+
+    %% === MENU_ITEM → MENU_ITEM_INGREDIENT ===
+    MENU_ITEM -- "1" --- requires_mi
+    requires_mi -- "N" --- MENU_ITEM_INGREDIENT
+
+    %% === INGREDIENT → MENU_ITEM_INGREDIENT ===
+    INGREDIENT -- "1" --- supplies
+    supplies -- "N" --- MENU_ITEM_INGREDIENT
+
+    %% === INGREDIENT → INVENTORY_BATCH ===
+    INGREDIENT -- "1" --- stocked_as
+    stocked_as -- "N" --- INVENTORY_BATCH
+
+    %% === INGREDIENT → INVENTORY_MOVEMENT ===
+    INGREDIENT -- "1" --- tracked_by
+    tracked_by -- "N" --- INVENTORY_MOVEMENT
+
+    %% === INVENTORY_BATCH → INVENTORY_MOVEMENT ===
+    INVENTORY_BATCH -- "1" --- movement_source
+    movement_source -- "N" --- INVENTORY_MOVEMENT
+
+    %% === TABLE → TABLE_SCAN_REQUEST ===
+    TABLE -- "1" --- scanned_for
+    scanned_for -- "N" --- TABLE_SCAN_REQUEST
+
+    %% === TABLE → TABLE_SESSION ===
+    TABLE -- "1" --- hosts
+    hosts -- "N" --- TABLE_SESSION
+
+    %% === TABLE_MERGE_GROUP → TABLE ===
+    TABLE_MERGE_GROUP -- "1" --- groups
+    groups -- "N" --- TABLE
+
+    %% === TABLE_SESSION → STAFF_PAGE_REQUEST ===
+    TABLE_SESSION -- "1" --- context_for
+    context_for -- "N" --- STAFF_PAGE_REQUEST
+
+    %% === TABLE_SESSION → ORDER ===
+    TABLE_SESSION -- "1" --- contains_order
+    contains_order -- "N" --- ORDER
+
+    %% === ORDER → ORDER_ITEM ===
+    ORDER -- "1" --- has
+    has -- "N" --- ORDER_ITEM
+
+    %% === MENU_ITEM → ORDER_ITEM ===
+    MENU_ITEM -- "1" --- ordered_as
+    ordered_as -- "N" --- ORDER_ITEM
+
+    %% === ORDER → ORDER_STATUS_LOG ===
+    ORDER -- "1" --- logs
+    logs -- "N" --- ORDER_STATUS_LOG
+
+    %% === ORDER_PLAYLIST → ORDER_PLAYLIST_ITEM ===
+    ORDER_PLAYLIST -- "1" --- contains_playlist
+    contains_playlist -- "N" --- ORDER_PLAYLIST_ITEM
+
+    %% === MENU_ITEM → ORDER_PLAYLIST_ITEM ===
+    MENU_ITEM -- "1" --- references
+    references -- "N" --- ORDER_PLAYLIST_ITEM
+
+    %% === EXTERNAL_SYSTEM → SYNC_EVENT ===
+    EXTERNAL_SYSTEM -- "1" --- emits
+    emits -- "N" --- SYNC_EVENT
+
+    %% === USER → GENERATED_REPORT ===
+    USER -- "1" --- generates
+    generates -- "N" --- GENERATED_REPORT
+
+    %% === USER → COST_SIMULATION ===
+    USER -- "1" --- creates
+    creates -- "N" --- COST_SIMULATION
