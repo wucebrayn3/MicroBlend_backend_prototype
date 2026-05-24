@@ -664,3 +664,68 @@ Send guest_key with guest order create/submit/cancel calls.
 Optionally call GET /api/identity/guest/session/?guest_key=... to show expiry countdown.
 
 aralin mo nlng pre kung pano mo gagamitin yan. LMK pag may na-encounter ka na problem.
+
+
+
+
+ADMIN ONLY
+GET api/analytics/dashboard/
+headers:
+Key: Authorization | Value: {token}
+payload:
+{
+    "range_type": "daily" (can be monthly, annual, and weekly)
+}
+response:
+{
+    "range": {
+        "start_at": "2026-05-24T00:00:00+08:00",
+        "end_at": "2026-05-24T23:59:59.999999+08:00"
+    },
+    "order_count": 0,
+    "paid_order_count": 0,
+    "revenue": 0.0,
+    "top_items": [],
+    "table_statuses": [
+        {
+            "status": "vacant",
+            "count": 1
+        }
+    ],
+    "open_staff_pages": 0,
+    "low_stock_ingredients": []
+}
+
+POST api/analytics/simulate/
+same headers lang
+payload:
+{
+  "menu_price_delta":"10.00",
+  "monthly_salary_delta":"5000.00",
+  "staff_delta":1,
+  "expansion_cost":"20000.00",
+  "added_capacity":10
+}
+response:
+{
+    "id": 1,
+    "created_at": "2026-05-24T18:46:18.443616+08:00",
+    "updated_at": "2026-05-24T18:46:18.443616+08:00",
+    "assumptions": {
+        "menu_price_delta": "10.00",
+        "monthly_salary_delta": "5000.00",
+        "staff_delta": 1,
+        "expansion_cost": "20000.00",
+        "added_capacity": 10
+    },
+    "results": {
+        "baseline_revenue": "0.00", (ibig sabihin ay wla pang recorded sales)
+        "projected_revenue": "10.00", (after ng price increase)
+        "projected_cost": "45000.00", 
+        "projected_profit": "-44990.00", (lugi pag naka negative)
+        "added_capacity": 10
+    },
+    "created_by": 2
+}
+ang ibig sabihin nito, pag dagdag ng staff at pag expand ay ikalulugi. This is what simulation does.
+Additionally, delta means increase

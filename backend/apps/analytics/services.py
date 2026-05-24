@@ -1,3 +1,4 @@
+from datetime import datetime, time, timedelta
 from django.utils import timezone
 from decimal import Decimal
 from pathlib import Path
@@ -10,8 +11,10 @@ from django.db.models import Count, Sum
 from apps.analytics.models import CostSimulation, GeneratedReport
 from apps.audit_logs.services import log_user_action
 from apps.inventory.models import Ingredient
+from apps.notifications.services import create_user_notification
 from apps.orders.models import Order, OrderItem
 from apps.tables.models import StaffPageRequest, Table
+from apps.users.models import User
 from common.utils import get_date_range, quantize_money
 
 
@@ -20,20 +23,23 @@ def build_dashboard_snapshot(start_at, end_at):
     order_items = OrderItem.objects.filter(order__in=orders)
     revenue = orders.filter(status="paid").aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
     return {
-        "range": {"start_at": start_at, "end_at": end_at},
+        "range": {"start_at": start_at.isoformat(), "end_at": end_at.isoformat()},
         "order_count": orders.count(),
         "paid_order_count": orders.filter(status="paid").count(),
-        "revenue": quantize_money(revenue),
+        "revenue": str(quantize_money(revenue)),
         "top_items": list(
             order_items.values("item_name").annotate(quantity=Sum("quantity")).order_by("-quantity", "item_name")[:5]
+        ),
+        "least_items": list(
+            order_items.values("item_name").annotate(quantity=Sum("quantity")).order_by("quantity", "item_name")[:5]
         ),
         "table_statuses": list(Table.objects.values("status").annotate(count=Count("id")).order_by("status")),
         "open_staff_pages": StaffPageRequest.objects.filter(status="pending").count(),
         "low_stock_ingredients": list(
             {
                 "name": ingredient.name,
-                "available_quantity": ingredient.available_quantity,
-                "reorder_level": ingredient.reorder_level,
+                "available_quantity": str(ingredient.available_quantity),
+                "reorder_level": str(ingredient.reorder_level),
             }
             for ingredient in Ingredient.objects.all()
             if ingredient.available_quantity <= ingredient.reorder_level
@@ -99,3 +105,30 @@ def reset_database(*, actor):
     backup_path = backup_database(actor=actor)
     call_command("flush", "--no-input")
     return backup_path
+
+
+def send_daily_digest_to_admins(*, target_date=None):
+    target_date = target_date or timezone.localdate()
+    start_at = timezone.make_aware(datetime.combine(target_date, time.min))
+    end_at = start_at + timedelta(days=1)
+
+    payload = build_dashboard_snapshot(start_at, end_at)
+    report = GeneratedReport.objects.create(
+        generated_by=None,
+        range_type=GeneratedReport.RANGE_DAILY,
+        start_at=start_at,
+        end_at=end_at,
+        payload=payload,
+    )
+    admins = User.objects.filter(role="admin", is_active=True, is_deleted=False)
+    revenue = payload.get("revenue", "0.00")
+    paid_orders = payload.get("paid_order_count", 0)
+    for admin in admins:
+        create_user_notification(
+            recipient=admin,
+            title="Daily analytics digest",
+            message=f"Daily digest for {target_date}: revenue {revenue}, paid orders {paid_orders}.",
+            category="analytics_digest",
+            metadata={"report_id": report.id, "date": str(target_date)},
+        )
+    return report, admins.count()

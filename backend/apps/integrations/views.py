@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from common.permissions import IsAdmin, IsStaffOrAdmin
 
 from .models import ExternalSystem, SyncEvent
-from .serializers import ExternalSystemSerializer, SyncEventSerializer
+from .serializers import ExternalSystemSerializer, SyncEventAckSerializer, SyncEventSerializer
+from .services import mark_sync_event_delivered, mark_sync_event_failed, retry_due_sync_events
 
 
 class ExternalSystemViewSet(viewsets.ModelViewSet):
@@ -29,3 +30,20 @@ class SyncEventViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewset
     def latest_cursor(self, request):
         latest = SyncEvent.objects.order_by("-id").first()
         return Response({"latest_id": latest.id if latest else 0})
+
+    @action(detail=True, methods=["post"], permission_classes=[IsStaffOrAdmin])
+    def acknowledge(self, request, pk=None):
+        event = self.get_object()
+        serializer = SyncEventAckSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        status_value = serializer.validated_data["status"]
+        if status_value == "delivered":
+            mark_sync_event_delivered(event=event)
+        else:
+            mark_sync_event_failed(event=event, error_message=serializer.validated_data.get("error"))
+        return Response(SyncEventSerializer(event).data)
+
+    @action(detail=False, methods=["post"], permission_classes=[IsAdmin])
+    def retry_due(self, request):
+        retried = retry_due_sync_events()
+        return Response({"retried_events": retried})

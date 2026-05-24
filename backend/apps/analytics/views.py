@@ -24,8 +24,8 @@ class AnalyticsViewSet(viewsets.ViewSet):
         start_at, end_at = get_date_range(range_type)
         return Response(build_dashboard_snapshot(start_at, end_at))
 
-    @action(detail=False, methods=["post"])
-    def reports(self, request):
+    @action(detail=False, methods=["post"], url_path="reports/generate", url_name="reports-generate")
+    def reports_generate(self, request):
         serializer = ReportRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         report = generate_report(actor=request.user, **serializer.validated_data)
