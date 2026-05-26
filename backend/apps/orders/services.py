@@ -18,17 +18,15 @@ from common.constants import (
     ORDER_CHANNEL_GUEST,
     ORDER_CHANNEL_WAITER,
     ORDER_STATUS_CANCELLED,
-    ORDER_STATUS_PAID,
-    ORDER_STATUS_PAYMENT_PENDING,
-    ORDER_STATUS_PLACED,
+    ORDER_STATUS_PENDING,
     ORDER_STATUS_PREPARING,
     ORDER_STATUS_READY,
+    ORDER_STATUS_WAITING,
+    PAYMENT_STATUS_AWAITING_PAYMENT,
+    PAYMENT_STATUS_PAID,
     STATION_BAR,
     STATION_KITCHEN,
-    WORKFLOW_STATUS_AWAITING_VERIFICATION,
     WORKFLOW_STATUS_NOT_REQUIRED,
-    WORKFLOW_STATUS_PAID,
-    WORKFLOW_STATUS_PENDING,
     WORKFLOW_STATUS_PREPARING,
     WORKFLOW_STATUS_READY,
 )
@@ -98,11 +96,9 @@ def _maybe_send_demand_alert(order):
                 menu_item=item.menu_item,
                 created_at__gte=window_start,
                 order__status__in=[
-                    ORDER_STATUS_PLACED,
+                    ORDER_STATUS_WAITING,
                     ORDER_STATUS_PREPARING,
                     ORDER_STATUS_READY,
-                    ORDER_STATUS_PAYMENT_PENDING,
-                    ORDER_STATUS_PAID,
                 ],
             )
             .aggregate(total=models.Sum("quantity"))["total"]
@@ -235,13 +231,11 @@ def submit_order(order, actor=None):
     if order.status == ORDER_STATUS_CANCELLED:
         raise ValidationError("Cancelled orders cannot be submitted.")
 
-    order.status = ORDER_STATUS_PLACED
+    order.status = ORDER_STATUS_PENDING
+    order.cashier_status = PAYMENT_STATUS_AWAITING_PAYMENT
     order.initialize_station_statuses()
-    if order.is_bulk_order:
-        order.requires_cashier_verification = True
-        order.cashier_status = WORKFLOW_STATUS_AWAITING_VERIFICATION
     order.save()
-    OrderStatusLog.objects.create(order=order, actor=actor, status=ORDER_STATUS_PLACED)
+    OrderStatusLog.objects.create(order=order, actor=actor, status=ORDER_STATUS_PENDING)
     publish_sync_event(
         event_type="order.submitted",
         aggregate_type="order",
@@ -306,6 +300,8 @@ def set_station_status(*, order, station, status_value, actor):
     if station not in {STATION_KITCHEN, STATION_BAR}:
         raise ValidationError("Unsupported station.")
     station_field = f"{station}_status"
+    if order.status not in {ORDER_STATUS_WAITING, ORDER_STATUS_PREPARING, ORDER_STATUS_READY}:
+        raise ValidationError("Kitchen and bar can only acknowledge orders that are in waiting/preparing/ready state.")
     current_status = getattr(order, station_field)
     if current_status == WORKFLOW_STATUS_NOT_REQUIRED:
         raise ValidationError(f"{station.title()} workflow is not required for this order.")
@@ -320,7 +316,6 @@ def set_station_status(*, order, station, status_value, actor):
         order.status = ORDER_STATUS_PREPARING
     if relevant_statuses.issubset({WORKFLOW_STATUS_READY, WORKFLOW_STATUS_NOT_REQUIRED}):
         order.status = ORDER_STATUS_READY
-        order.cashier_status = WORKFLOW_STATUS_PENDING
     order.save()
     OrderStatusLog.objects.create(order=order, actor=actor, status=f"{station}.{status_value}")
     publish_sync_event(
@@ -346,12 +341,16 @@ def set_station_status(*, order, station, status_value, actor):
 
 @transaction.atomic
 def set_cashier_status(*, order, status_value, actor):
-    order.cashier_status = status_value
-    if status_value == ORDER_STATUS_PAYMENT_PENDING:
-        order.status = ORDER_STATUS_PAYMENT_PENDING
-    elif status_value == WORKFLOW_STATUS_PAID or status_value == ORDER_STATUS_PAID:
-        order.status = ORDER_STATUS_PAID
-        order.cashier_status = WORKFLOW_STATUS_PAID
+    if status_value == ORDER_STATUS_WAITING:
+        if order.status not in {ORDER_STATUS_PENDING, ORDER_STATUS_WAITING}:
+            raise ValidationError("Only pending orders can be confirmed to waiting.")
+        order.status = ORDER_STATUS_WAITING
+    elif status_value == PAYMENT_STATUS_AWAITING_PAYMENT:
+        order.cashier_status = PAYMENT_STATUS_AWAITING_PAYMENT
+    elif status_value == PAYMENT_STATUS_PAID:
+        order.cashier_status = PAYMENT_STATUS_PAID
+    else:
+        raise ValidationError("Unsupported cashier status update.")
     order.save()
     OrderStatusLog.objects.create(order=order, actor=actor, status=f"cashier.{status_value}")
     publish_sync_event(

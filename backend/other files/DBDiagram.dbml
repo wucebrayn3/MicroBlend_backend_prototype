@@ -1,0 +1,341 @@
+// dbdiagram.io DSL — MicroBlend system
+// Paste at https://dbdiagram.io/d
+
+Table users {
+  id bigint [pk, increment]
+  username varchar(150) [unique]
+  password varchar(128)
+  email varchar(254) [unique]
+  phone varchar(20) [unique]
+  role varchar(20)
+  staff_role varchar(20)
+  registered_device_id varchar(128) [unique]
+  is_guest boolean
+  guest_expires_at datetime
+  is_active boolean
+  is_deleted boolean
+  is_staff boolean
+  is_superuser boolean
+  first_name varchar(150)
+  last_name varchar(150)
+  date_joined datetime
+  last_login datetime
+  created_at datetime
+  updated_at datetime
+}
+
+Table categories {
+  id bigint [pk, increment]
+  name varchar(100) [unique]
+  sort_order integer
+  created_at datetime
+  updated_at datetime
+}
+
+Table menu_items {
+  id bigint [pk, increment]
+  name varchar(200) [unique]
+  description text
+  price decimal(10,2)
+  preparation_station varchar(20)
+  prep_eta_minutes integer
+  is_available boolean
+  popularity_score integer
+  category_id bigint [ref: > categories.id]
+  created_at datetime
+  updated_at datetime
+}
+
+Table menu_item_ingredients {
+  id bigint [pk, increment]
+  menu_item_id bigint [ref: > menu_items.id]
+  ingredient_id bigint [ref: > ingredients.id]
+  quantity_required decimal(10,2)
+  created_at datetime
+  updated_at datetime
+
+  indexes {
+    (menu_item_id, ingredient_id) [unique]
+  }
+}
+
+Table ingredients {
+  id bigint [pk, increment]
+  name varchar(150) [unique]
+  unit varchar(10)
+  reorder_level decimal(10,2)
+  created_at datetime
+  updated_at datetime
+}
+
+Table inventory_batches {
+  id bigint [pk, increment]
+  ingredient_id bigint [ref: > ingredients.id]
+  quantity_added decimal(10,2)
+  quantity_remaining decimal(10,2)
+  unit_cost decimal(10,2)
+  expiration_date date
+  source varchar(120)
+  created_at datetime
+  updated_at datetime
+}
+
+Table inventory_movements {
+  id bigint [pk, increment]
+  ingredient_id bigint [ref: > ingredients.id]
+  batch_id bigint [ref: > inventory_batches.id]
+  movement_type varchar(20)
+  quantity decimal(10,2)
+  actor_id bigint [ref: > users.id]
+  note varchar(255)
+  related_order_id bigint
+  created_at datetime
+  updated_at datetime
+}
+
+Table orders {
+  id bigint [pk, increment]
+  table_session_id bigint [ref: > table_sessions.id]
+  placed_by_id bigint [ref: > users.id]
+  placed_by_name varchar(120)
+  placed_by_role varchar(30)
+  placed_for_name varchar(120)
+  placed_for_contact varchar(120)
+  channel varchar(30)
+  status varchar(30)
+  kitchen_status varchar(30)
+  bar_status varchar(30)
+  cashier_status varchar(30)
+  is_bulk_order boolean
+  requires_cashier_verification boolean
+  price_alert_sent boolean
+  total_amount decimal(10,2)
+  receipt_number varchar(40) [unique]
+  notes text
+  external_pos_reference varchar(120)
+  inventory_committed boolean
+  created_at datetime
+  updated_at datetime
+}
+
+Table order_items {
+  id bigint [pk, increment]
+  order_id bigint [ref: > orders.id]
+  menu_item_id bigint [ref: > menu_items.id]
+  item_name varchar(200)
+  station varchar(20)
+  quantity integer
+  unit_price decimal(10,2)
+  customization_notes varchar(255)
+  created_at datetime
+  updated_at datetime
+}
+
+Table order_status_logs {
+  id bigint [pk, increment]
+  order_id bigint [ref: > orders.id]
+  actor_id bigint [ref: > users.id]
+  status varchar(40)
+  note varchar(255)
+  metadata json
+  created_at datetime
+  updated_at datetime
+}
+
+Table feedback_entries {
+  id bigint [pk, increment]
+  submitted_by_id bigint [ref: > users.id]
+  order_id bigint [ref: > orders.id]
+  entry_type varchar(20)
+  subject varchar(150)
+  message text
+  status varchar(20)
+  created_at datetime
+  updated_at datetime
+}
+
+Table order_playlists {
+  id bigint [pk, increment]
+  owner_id bigint [ref: > users.id]
+  name varchar(120)
+  created_at datetime
+  updated_at datetime
+
+  indexes {
+    (owner_id, name) [unique]
+  }
+}
+
+Table order_playlist_items {
+  id bigint [pk, increment]
+  playlist_id bigint [ref: > order_playlists.id]
+  menu_item_id bigint [ref: > menu_items.id]
+  quantity integer
+  created_at datetime
+  updated_at datetime
+
+  indexes {
+    (playlist_id, menu_item_id) [unique]
+  }
+}
+
+Table tables {
+  id bigint [pk, increment]
+  identifier varchar(30) [unique]
+  capacity integer
+  status varchar(20)
+  zone varchar(100)
+  qr_code_value varchar(64) [unique]
+  created_at datetime
+  updated_at datetime
+}
+
+Table table_merge_groups {
+  id bigint [pk, increment]
+  name varchar(64) [unique]
+  is_active boolean
+  created_at datetime
+  updated_at datetime
+}
+
+// Junction table for M2M: TableMergeGroup <-> Table
+Table table_merge_group_tables {
+  id bigint [pk, increment]
+  table_merge_group_id bigint [ref: > table_merge_groups.id]
+  table_id bigint [ref: > tables.id]
+
+  indexes {
+    (table_merge_group_id, table_id) [unique]
+  }
+}
+
+Table table_sessions {
+  id bigint [pk, increment]
+  table_id bigint [ref: > tables.id]
+  merge_group_id bigint [ref: > table_merge_groups.id]
+  opened_by_id bigint [ref: > users.id]
+  customer_account_id bigint [ref: > users.id]
+  scan_request_id bigint [ref: > table_scan_requests.id]
+  source varchar(20)
+  party_size integer
+  guest_label varchar(120)
+  started_at datetime
+  ended_at datetime
+  is_active boolean
+  created_at datetime
+  updated_at datetime
+}
+
+Table table_scan_requests {
+  id bigint [pk, increment]
+  table_id bigint [ref: > tables.id]
+  requested_by_id bigint [ref: > users.id]
+  requested_device_id varchar(128)
+  status varchar(20)
+  note varchar(255)
+  blocked_reason varchar(255)
+  created_at datetime
+  updated_at datetime
+}
+
+Table staff_page_requests {
+  id bigint [pk, increment]
+  table_id bigint [ref: > tables.id]
+  session_id bigint [ref: > table_sessions.id]
+  requested_by_id bigint [ref: > users.id]
+  resolved_by_id bigint [ref: > users.id]
+  reason varchar(20)
+  status varchar(20)
+  created_at datetime
+  updated_at datetime
+}
+
+Table notifications {
+  id bigint [pk, increment]
+  recipient_id bigint [ref: > users.id]
+  role_target varchar(20)
+  title varchar(150)
+  message text
+  category varchar(50)
+  metadata json
+  is_read boolean
+  created_at datetime
+  updated_at datetime
+}
+
+Table debounce_records {
+  id bigint [pk, increment]
+  actor_key varchar(120)
+  action varchar(80)
+  object_key varchar(120)
+  created_at datetime
+  updated_at datetime
+
+  indexes {
+    (actor_key, action, object_key) [unique]
+  }
+}
+
+Table audit_logs {
+  id bigint [pk, increment]
+  actor_id bigint [ref: > users.id]
+  actor_role varchar(20)
+  action varchar(120)
+  target_type varchar(120)
+  target_id varchar(64)
+  target_label varchar(255)
+  metadata json
+  created_at datetime
+  updated_at datetime
+}
+
+Table generated_reports {
+  id bigint [pk, increment]
+  generated_by_id bigint [ref: > users.id]
+  range_type varchar(20)
+  start_at datetime
+  end_at datetime
+  payload json
+  created_at datetime
+  updated_at datetime
+}
+
+Table cost_simulations {
+  id bigint [pk, increment]
+  created_by_id bigint [ref: > users.id]
+  assumptions json
+  results json
+  created_at datetime
+  updated_at datetime
+}
+
+Table external_systems {
+  id bigint [pk, increment]
+  name varchar(120) [unique]
+  system_type varchar(20)
+  is_active boolean
+  created_at datetime
+  updated_at datetime
+}
+
+Table sync_events {
+  id bigint [pk, increment]
+  source_system_id bigint [ref: > external_systems.id]
+  event_type varchar(80)
+  aggregate_type varchar(80)
+  aggregate_id varchar(64)
+  payload json
+  idempotency_key varchar(120) [unique]
+  created_at datetime
+  updated_at datetime
+}
+
+Table realtime_events {
+  id bigint [pk, increment]
+  event_type varchar(120)
+  payload json
+  role_target varchar(20)
+  user_id bigint [ref: > users.id]
+  created_at datetime
+  updated_at datetime
+}

@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from django.db.models import Q
 
 from common.permissions import IsAuthenticatedAndActive, IsStaffOrAdmin, build_staff_role_permission
 
@@ -63,11 +64,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         if user.role == "customer":
             return queryset.filter(placed_by=user)
         if user.role == "staff" and user.staff_role == "waiter":
-            return queryset
+            return queryset.filter(Q(status__in=["preparing", "ready"]) | Q(cashier_status="awaiting_payment")).distinct()
         if user.role == "staff" and user.staff_role == "kitchen":
-            return queryset.filter(items__station="kitchen").distinct()
+            return queryset.filter(items__station="kitchen", status__in=["waiting", "ready"]).distinct()
         if user.role == "staff" and user.staff_role == "bar":
-            return queryset.filter(items__station="bar").distinct()
+            return queryset.filter(items__station="bar", status__in=["waiting", "ready"]).distinct()
+        if user.role == "staff" and user.staff_role == "cashier":
+            return queryset.filter(Q(status="pending") | Q(cashier_status__in=["awaiting_payment", "paid"])).distinct()
         return queryset
 
     @action(detail=True, methods=["post"])

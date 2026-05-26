@@ -70,6 +70,9 @@ def run_cost_simulation(*, actor, menu_price_delta=Decimal("0"), monthly_salary_
 
     simulation = CostSimulation.objects.create(
         created_by=actor,
+        menu_price_delta=menu_price_delta,
+        monthly_salary_delta=monthly_salary_delta,
+        staff_delta=staff_delta,
         assumptions={
             "menu_price_delta": str(menu_price_delta),
             "monthly_salary_delta": str(monthly_salary_delta),

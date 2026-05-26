@@ -1,0 +1,42 @@
+flowchart LR
+    Internet(("Internet"))
+
+    Modem["Modem"]
+
+    Router["Router / Access Point"]
+
+    Server_PC["Server PC / Laptop
+    Django + SQLite"]
+
+    POS_Tablet["POS Tablet
+    Waiter / Cashier"]
+
+    Kitchen_Display["Kitchen Display"]
+
+    Staff_Phone["Staff Phone"]
+
+    Customer_Phone["Customer Phone
+    Scan QR + Order"]
+
+    External_POS["External POS
+    Cloud Service"]
+
+    Laptop["Admin / Manager Laptop"]
+
+    Internet --- Modem
+    Modem --- Router
+
+    Router -.->|Wi-Fi| Server_PC
+    Router -.->|Wi-Fi| POS_Tablet
+    Router -.->|Wi-Fi| Kitchen_Display
+    Router -.->|Wi-Fi| Staff_Phone
+    Router -.->|Wi-Fi| Customer_Phone
+    Router -.->|Wi-Fi| Laptop
+
+    Server_PC -.->|API / SSE| POS_Tablet
+    Server_PC -.->|API / SSE| Kitchen_Display
+    Server_PC -.->|API / SSE| Staff_Phone
+    Server_PC -.->|API / SSE| Customer_Phone
+    Server_PC -.->|API / SSE| Laptop
+    Server_PC -.->|Sync Events| External_POS
+    External_POS -.->|Sync Orders & Menu| Server_PC

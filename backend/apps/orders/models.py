@@ -8,6 +8,8 @@ from common.constants import (
     ORDER_CHANNEL_CUSTOMER,
     ORDER_STATUS_CHOICES,
     ORDER_STATUS_DRAFT,
+    PAYMENT_STATUS_AWAITING_PAYMENT,
+    PAYMENT_STATUS_CHOICES,
     WORKFLOW_STATUS_AWAITING_VERIFICATION,
     WORKFLOW_STATUS_CHOICES,
     WORKFLOW_STATUS_NOT_REQUIRED,
@@ -36,8 +38,8 @@ class Order(BaseModel):
     bar_status = models.CharField(max_length=30, choices=WORKFLOW_STATUS_CHOICES, default=WORKFLOW_STATUS_PENDING)
     cashier_status = models.CharField(
         max_length=30,
-        choices=WORKFLOW_STATUS_CHOICES,
-        default=WORKFLOW_STATUS_PENDING,
+        choices=PAYMENT_STATUS_CHOICES,
+        default=PAYMENT_STATUS_AWAITING_PAYMENT,
     )
     is_bulk_order = models.BooleanField(default=False)
     requires_cashier_verification = models.BooleanField(default=False)
@@ -72,7 +74,7 @@ class Order(BaseModel):
         if not self.station_required("bar"):
             self.bar_status = WORKFLOW_STATUS_NOT_REQUIRED
         if self.is_bulk_order:
-            self.cashier_status = WORKFLOW_STATUS_AWAITING_VERIFICATION
+            self.requires_cashier_verification = True
 
     def __str__(self):
         return self.receipt_number or f"Order {self.pk}"

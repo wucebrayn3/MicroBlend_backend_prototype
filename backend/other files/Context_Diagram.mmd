@@ -1,0 +1,36 @@
+flowchart LR
+    Customer[Customer]
+    Waiter[Waiter]
+    Kitchen[Kitchen Staff]
+    Bar[Bar Staff]
+
+    System((MicroBlend System))
+
+    Cashier[Cashier]
+    POS[External POS]
+    Mobile[Kiosk / Mobile]
+    Admin[Administrator]
+
+    Customer -->|Place Order, Scan QR,<br/>Feedback, Page Staff| System
+    System -->|Confirmation, Receipt,<br/>Notification| Customer
+
+    Waiter -->|Manage Session,<br/>Place / Modify Order| System
+    System -->|Table Status,<br/>Pending Requests| Waiter
+
+    Kitchen -->|Update Prep Status| System
+    System -->|Order Queue| Kitchen
+
+    Bar -->|Update Drink Status| System
+    System -->|Drink Queue| Bar
+
+    Cashier -->|Process Payment,<br/>Verify Bulk Order| System
+    System -->|Pending Bills| Cashier
+
+    POS -->|Sync Orders & Menu| System
+    System -->|Sync Events| POS
+
+    Mobile -->|Browse Menu,<br/>Submit Order| System
+    System -->|Order Status| Mobile
+
+    Admin -->|Manage Menu, Inventory,<br/>Users, Systems| System
+    System -->|Reports, Audit Logs,<br/>Simulations| Admin

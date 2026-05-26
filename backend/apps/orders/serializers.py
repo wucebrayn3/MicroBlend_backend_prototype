@@ -134,7 +134,7 @@ class StationStatusSerializer(serializers.Serializer):
 
 
 class CashierStatusSerializer(serializers.Serializer):
-    status = serializers.ChoiceField(choices=["payment_pending", "paid", "awaiting_verification"])
+    status = serializers.ChoiceField(choices=["waiting", "awaiting_payment", "paid"])
 
     def save(self, **kwargs):
         return set_cashier_status(
