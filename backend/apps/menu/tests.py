@@ -8,3 +8,9 @@ class MenuOrderingTests(TestCase):
         category = Category.objects.create(name="Beverages")
         item = MenuItem.objects.create(name="Iced Tea", category=category, price=75, prep_eta_minutes=5)
         self.assertEqual(item.category.name, "Beverages")
+
+    def test_category_sort_order_is_auto_assigned(self):
+        first = Category.objects.create(name="Meals")
+        second = Category.objects.create(name="Drinks")
+        self.assertEqual(first.sort_order, 1)
+        self.assertEqual(second.sort_order, 2)

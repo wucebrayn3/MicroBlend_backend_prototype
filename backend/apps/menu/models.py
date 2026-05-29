@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Max
 
 from common.constants import PREPARATION_STATION_CHOICES, STATION_KITCHEN
 from common.models import BaseModel
@@ -13,6 +14,12 @@ class Category(BaseModel):
 
     class Meta:
         ordering = ("sort_order", "name")
+
+    def save(self, *args, **kwargs):
+        if not self.pk and self.sort_order == 0:
+            next_order = Category.objects.aggregate(max_order=Max("sort_order"))["max_order"] or 0
+            self.sort_order = next_order + 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
