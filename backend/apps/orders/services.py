@@ -340,19 +340,21 @@ def set_station_status(*, order, station, status_value, actor):
 
 
 @transaction.atomic
-def set_cashier_status(*, order, status_value, actor):
+def set_cashier_status(*, order, status_value, actor, credential_verified=False, note=None):
     if status_value == ORDER_STATUS_WAITING:
         if order.status not in {ORDER_STATUS_PENDING, ORDER_STATUS_WAITING}:
             raise ValidationError("Only pending orders can be confirmed to waiting.")
         order.status = ORDER_STATUS_WAITING
     elif status_value == PAYMENT_STATUS_AWAITING_PAYMENT:
+        if order.cashier_status == PAYMENT_STATUS_PAID and not credential_verified:
+            raise ValidationError("Cashier credential verification is required to mark a paid order as unpaid.")
         order.cashier_status = PAYMENT_STATUS_AWAITING_PAYMENT
     elif status_value == PAYMENT_STATUS_PAID:
         order.cashier_status = PAYMENT_STATUS_PAID
     else:
         raise ValidationError("Unsupported cashier status update.")
     order.save()
-    OrderStatusLog.objects.create(order=order, actor=actor, status=f"cashier.{status_value}")
+    OrderStatusLog.objects.create(order=order, actor=actor, status=f"cashier.{status_value}", note=note)
     publish_sync_event(
         event_type="order.cashier_updated",
         aggregate_type="order",

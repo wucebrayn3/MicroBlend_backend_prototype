@@ -21,11 +21,11 @@ from common.utils import get_date_range, quantize_money
 def build_dashboard_snapshot(start_at, end_at):
     orders = Order.objects.filter(created_at__range=(start_at, end_at))
     order_items = OrderItem.objects.filter(order__in=orders)
-    revenue = orders.filter(status="paid").aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
+    revenue = orders.filter(cashier_status="paid").aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
     return {
         "range": {"start_at": start_at.isoformat(), "end_at": end_at.isoformat()},
         "order_count": orders.count(),
-        "paid_order_count": orders.filter(status="paid").count(),
+        "paid_order_count": orders.filter(cashier_status="paid").count(),
         "revenue": str(quantize_money(revenue)),
         "top_items": list(
             order_items.values("item_name").annotate(quantity=Sum("quantity")).order_by("-quantity", "item_name")[:5]
@@ -62,8 +62,8 @@ def generate_report(*, actor, range_type, start=None, end=None):
 
 
 def run_cost_simulation(*, actor, menu_price_delta=Decimal("0"), monthly_salary_delta=Decimal("0"), staff_delta=0, expansion_cost=Decimal("0"), added_capacity=0):
-    baseline_revenue = Order.objects.filter(status="paid").aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
-    baseline_orders = Order.objects.filter(status="paid").count() or 1
+    baseline_revenue = Order.objects.filter(cashier_status="paid").aggregate(total=Sum("total_amount"))["total"] or Decimal("0")
+    baseline_orders = Order.objects.filter(cashier_status="paid").count() or 1
     projected_revenue = baseline_revenue + (baseline_orders * menu_price_delta)
     projected_cost = monthly_salary_delta + expansion_cost + Decimal(max(staff_delta, 0) * 20000)
     projected_profit = projected_revenue - projected_cost

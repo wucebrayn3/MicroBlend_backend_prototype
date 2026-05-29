@@ -8,7 +8,7 @@ from django.utils import timezone
 from apps.inventory.models import Ingredient
 from apps.inventory.services import restock_batch
 from apps.menu.models import Category, MenuItem, MenuItemIngredient
-from apps.orders.services import cancel_order, create_or_update_draft_order, set_station_status, submit_order
+from apps.orders.services import cancel_order, create_or_update_draft_order, set_cashier_status, set_station_status, submit_order
 from apps.table_sessions.models import TableSession
 from apps.tables.models import Table
 from apps.users.models import User
@@ -100,3 +100,26 @@ class OrderLifecycleTests(TestCase):
         self.assertNotEqual(old_guest.id, new_order.placed_by_id)
         old_guest.refresh_from_db()
         self.assertFalse(old_guest.is_active)
+
+    def test_cashier_can_revert_paid_to_awaiting_payment_with_verification(self):
+        cashier = User.objects.create_user(
+            email="cashier@example.com",
+            password="password123",
+            role="staff",
+            staff_role="cashier",
+        )
+        order = create_or_update_draft_order(
+            actor=self.customer,
+            order=None,
+            order_data={"table_session": self.session},
+            items_data=[{"menu_item": self.menu_item, "quantity": 1}],
+        )
+        submit_order(order, actor=self.customer)
+        set_cashier_status(order=order, status_value="paid", actor=cashier)
+        with self.assertRaises(ValidationError):
+            set_cashier_status(order=order, status_value="awaiting_payment", actor=cashier)
+        order.status = "waiting"
+        order.save(update_fields=["status", "updated_at"])
+        set_cashier_status(order=order, status_value="awaiting_payment", actor=cashier, credential_verified=True)
+        order.refresh_from_db()
+        self.assertEqual(order.cashier_status, "awaiting_payment")

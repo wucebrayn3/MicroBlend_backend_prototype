@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 
 from apps.menu.models import MenuItem, OrderPlaylist
@@ -134,13 +135,50 @@ class StationStatusSerializer(serializers.Serializer):
 
 
 class CashierStatusSerializer(serializers.Serializer):
-    status = serializers.ChoiceField(choices=["waiting", "awaiting_payment", "paid"])
+    status = serializers.ChoiceField(choices=["waiting", "awaiting_payment", "paid", "unpaid"])
+    reason = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    cashier_identifier = serializers.CharField(required=False, allow_blank=True)
+    cashier_password = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    def validate(self, attrs):
+        status_value = attrs["status"]
+        order = self.context["order"]
+        request_user = self.context["request"].user
+        if status_value == "unpaid":
+            attrs["status"] = "awaiting_payment"
+            status_value = "awaiting_payment"
+        if status_value == "awaiting_payment" and order.cashier_status == "paid":
+            if order.status not in {"pending", "waiting"}:
+                raise serializers.ValidationError("Paid orders can only be marked unpaid before preparation begins.")
+            identifier = (attrs.get("cashier_identifier") or "").strip()
+            password = attrs.get("cashier_password") or ""
+            if not identifier or not password:
+                raise serializers.ValidationError("Cashier credentials are required to mark a paid order as unpaid.")
+            lookup = {"email": identifier} if "@" in identifier else {"phone": identifier}
+            from apps.users.models import User
+            try:
+                cashier_user = User.objects.get(**lookup)
+            except User.DoesNotExist as exc:
+                raise serializers.ValidationError("Invalid cashier credentials.") from exc
+            authenticated_user = authenticate(username=cashier_user.username, password=password)
+            if not authenticated_user or not authenticated_user.is_active:
+                raise serializers.ValidationError("Invalid cashier credentials.")
+            if authenticated_user.id != request_user.id:
+                raise serializers.ValidationError("Credentials must belong to the acting cashier.")
+            if authenticated_user.role != "staff" or authenticated_user.staff_role != "cashier":
+                raise serializers.ValidationError("Only cashier credentials are allowed for this action.")
+            if not attrs.get("reason"):
+                raise serializers.ValidationError({"reason": "A reason is required to revert a paid order."})
+            attrs["credential_verified"] = True
+        return attrs
 
     def save(self, **kwargs):
         return set_cashier_status(
             order=self.context["order"],
             status_value=self.validated_data["status"],
             actor=self.context["request"].user,
+            credential_verified=self.validated_data.get("credential_verified", False),
+            note=self.validated_data.get("reason"),
         )
 
 
